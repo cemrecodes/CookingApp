@@ -5,6 +5,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -28,7 +29,7 @@ public class FoodRecipe {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(length = 100)
+    @Column(length = 50)
     private String recipeName;
 
     @Column(length = 10)
@@ -49,4 +50,8 @@ public class FoodRecipe {
     private OffsetDateTime createTime;
 
     private int score;
+    @PrePersist
+    public void prePersist() {
+        this.createTime = OffsetDateTime.now();
+    }
 }
