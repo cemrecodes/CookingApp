@@ -58,4 +58,27 @@ public class Util {
         return 0; // Varsayılan değer, sayı bulunamazsa
     }
 
+    public static String parseDuration(String duration) {
+        int hoursIndex = duration.indexOf("H");
+        int minutesIndex = duration.indexOf("M");
+
+        int hours = 0;
+        int minutes = 0;
+
+        if (hoursIndex != -1) {
+            hours = Integer.parseInt(duration.substring(2, hoursIndex));
+            return hours + " saat ";
+        }
+
+        if (minutesIndex != -1) {
+            if (hoursIndex != -1) {
+                minutes = Integer.parseInt(duration.substring(hoursIndex + 1, minutesIndex));
+            } else {
+                minutes = Integer.parseInt(duration.substring(2, minutesIndex));
+            }
+            return minutes + " dakika";
+        }
+
+        return null;
+    }
 }

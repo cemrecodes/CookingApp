@@ -3,6 +3,7 @@ package com.cookingapp.cookingapp.dto;
 import lombok.Data;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 @Data
 public class FoodRecipeDto {
@@ -12,8 +13,8 @@ public class FoodRecipeDto {
     private String cookingTime;
     private String preparationTime;
     private int servesFor;
-    private ArrayList<String> ingredients;
-    private String method;
+    private HashMap<Integer, ArrayList<String>> ingredients;
+    private HashMap<Integer, String> instructions;
     private OffsetDateTime createTime;
     private int score;
 

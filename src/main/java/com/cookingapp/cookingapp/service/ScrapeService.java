@@ -15,19 +15,22 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
 public class ScrapeService {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScrapeService.class);
 
-    public FoodRecipeDto scrapeAndCreateNewFoodRecipe(String foodName){
+    public FoodRecipeDto scrapeAndCreateNewFoodRecipe(String foodName) {
         String permaLink = this.searchFoodRecipeUrl(foodName);
-        Result result = this.scrapeUrl("https://www.yemek.com", permaLink);
-        FoodRecipeDto recipe = this.getFoodRecipe(result.getScript(), result.getDocument());
-        return recipe;
+        String recipe = this.scrapeUrl("https://www.yemek.com", permaLink);
+        return this.getFoodRecipe(recipe);
     }
 
     public String searchFoodRecipeUrl(String foodName){
@@ -53,8 +56,7 @@ public class ScrapeService {
         return firstPermalink;
     }
 
-    public Result scrapeUrl(String url, String foodName){
-        String permaLink = this.searchFoodRecipeUrl(foodName);
+    public String scrapeUrl(String url, String permaLink){
         StringBuilder fullUrl = new StringBuilder(url);
         fullUrl.append(permaLink);
 
@@ -63,9 +65,8 @@ public class ScrapeService {
             Elements elements = doc.getElementsByTag("script");
             Element scriptElement = elements.first();
 
-            String script = scriptElement.data();
-            Result res = new Result(script, doc);
-            return res;
+            assert scriptElement != null;
+            return scriptElement.data();
         }
         catch (Exception e){
             logger.error("Couldn't scrape url: {}", e.getMessage());
@@ -73,75 +74,60 @@ public class ScrapeService {
         }
     }
 
-    public FoodRecipeDto getFoodRecipe(String script, Document doc){
+    public FoodRecipeDto getFoodRecipe(String script){
         Map<String, Object> mappedScript = Util.convertJsonToMap(script);
         FoodRecipeDto foodRecipeDto = new FoodRecipeDto();
         foodRecipeDto.setRecipeName((String) mappedScript.get("name"));
-        Elements recipeDetailElements = doc.select("div.ContentRecipe_recipeDetail__0EBU0 span");
-        Element first = null;
-        Element second = null;
-        Element third = null;
-        if(recipeDetailElements.size() > 2){
-            first = recipeDetailElements.get(0); //to get first
-            second = recipeDetailElements.get(1); //to get second
-            third = recipeDetailElements.get(2); //to get third
-        }
-        foodRecipeDto.setServesFor(Util.extractNumber(Objects.requireNonNull(first.text())));
-        foodRecipeDto.setCookingTime(Objects.requireNonNull(second.text()));
-        foodRecipeDto.setPreparationTime(Objects.requireNonNull(third.text()));
+        foodRecipeDto.setServesFor(Integer.parseInt((String) mappedScript.get("recipeYield")));
+        foodRecipeDto.setCookingTime(Util.parseDuration((String) mappedScript.get("cookTime")));
+        foodRecipeDto.setPreparationTime(Util.parseDuration((String) mappedScript.get("prepTime")));
 
-        /*
+        List<List<String>> recipeIngredients = (List<List<String>>)mappedScript.get("recipeIngredient");
+        HashMap<Integer, ArrayList<String>> ingredientsMap = getIngredientsMap(recipeIngredients);
+        foodRecipeDto.setIngredients(ingredientsMap);
 
-        String[] parts = ingredientText.split("(\\d+\\s*(?:bardağı|adet|kaşığı|gram|paket|kase)\\s*)", 2);
+        List<List<String>> recipeInstructions = (List<List<String>>)mappedScript.get("recipeInstructions");
+        HashMap<Integer, String> instructionsMap = getInstructionsMap(recipeInstructions);
+        foodRecipeDto.setInstructions(instructionsMap);
 
-        String amount = parts[0].trim();
-        String ingredient = parts[1].trim();
-
-         */
         return foodRecipeDto;
     }
 
-    private static class Result {
-        private boolean success;
-        private String script;
-        private Document document;
-        private String error;
+    private HashMap<Integer, ArrayList<String>> getIngredientsMap(List<List<String>> recipeIngredients) {
+        HashMap<Integer, ArrayList<String>> ingredientsMap = new HashMap<>();
+        int ingredientIndex = 0;
+        for (List<String> ingredientList : recipeIngredients) {
+            for (String ingredient : ingredientList) {
+                ArrayList<String> ingredients = new ArrayList<>();
+                Pattern pattern = Pattern.compile("(.*?\\s(?:bardağı|adet|kaşığı|gram|paket|kase|diş))\\s*(.*)");
+                Matcher matcher = pattern.matcher(ingredient);
 
-        public Result(boolean success, String script, Document document, String error) {
-            this.success = success;
-            this.script = script;
-            this.document = document;
-            this.error = error;
+                if (matcher.find()) {
+                    ingredients.add(matcher.group(1).trim());
+                    ingredients.add(matcher.group(2).trim());
+                }
+                ingredientsMap.put(ingredientIndex, ingredients);
+                ingredientIndex++;
+            }
         }
+        return ingredientsMap;
+    }
 
-        public Result(String script, Document document) {
-            this.script = script;
-            this.document = document;
+    private HashMap<Integer, String> getInstructionsMap(List<List<String>> recipeInstructions){
+        HashMap<Integer, String> instructionMap = new HashMap<>();
+        int instructionIndex = 0;
+        for (List<String> instructionList : recipeInstructions) {
+            for (String instruction : instructionList) {
+                Pattern pattern = Pattern.compile("(.*?[.!?])");
+                Matcher matcher = pattern.matcher(instruction);
+
+                while (matcher.find()) {
+                    instructionMap.put(instructionIndex, matcher.group(1).trim());
+                }
+                instructionIndex += 1;
+            }
         }
-
-        public Result(){
-
-        }
-
-        public Result(boolean success, String script, Document document) {
-            this(success, script, document, null);
-        }
-
-        public boolean isSuccess() {
-            return success;
-        }
-
-        public String getScript() {
-            return script;
-        }
-
-        public Document getDocument() {
-            return document;
-        }
-
-        public String getError() {
-            return error;
-        }
+        return instructionMap;
     }
 
 }
