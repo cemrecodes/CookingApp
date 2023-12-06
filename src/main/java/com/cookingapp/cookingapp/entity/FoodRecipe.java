@@ -1,6 +1,7 @@
 package com.cookingapp.cookingapp.entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -39,6 +40,9 @@ public class FoodRecipe {
     private String preparationTime;
 
     private int servesFor;
+
+    @Enumerated
+    private DifficultyLevel difficultyLevel;
 
     @Lob
     private String ingredients;

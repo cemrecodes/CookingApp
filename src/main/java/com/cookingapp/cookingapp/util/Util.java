@@ -1,9 +1,14 @@
 package com.cookingapp.cookingapp.util;
 
+import com.cookingapp.cookingapp.entity.DifficultyLevel;
 import com.google.gson.Gson;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -81,4 +86,33 @@ public class Util {
 
         return null;
     }
+
+    public static String translateDifficultyLevel(DifficultyLevel level){
+        switch (level){
+            case EASY -> {
+                return "Kolay";
+            }
+            case MEDIUM ->
+            {
+                return "Orta";
+            }
+            case HARD -> {
+                return "Zor";
+            }
+            default -> {
+                return "Belirtilmemiş";
+            }
+        }
+    }
+
+    public static List<?> convertObjectToList(Object obj) {
+        List<?> list = new ArrayList<>();
+        if (obj.getClass().isArray()) {
+            list = Arrays.asList((Object[])obj);
+        } else if (obj instanceof Collection) {
+            list = new ArrayList<>((Collection<?>)obj);
+        }
+        return list;
+    }
+
 }
