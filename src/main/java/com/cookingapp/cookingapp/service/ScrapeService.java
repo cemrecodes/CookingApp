@@ -1,6 +1,6 @@
 package com.cookingapp.cookingapp.service;
 
-import com.cookingapp.cookingapp.dto.FoodRecipeDto;
+import com.cookingapp.cookingapp.dto.RecipeDto;
 import com.cookingapp.cookingapp.util.Util;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,7 +9,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
@@ -28,16 +27,19 @@ import java.util.regex.Pattern;
 public class ScrapeService {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScrapeService.class);
 
-    @Autowired
-    private ChatGptService chatGptService;
+    private final RecipeService recipeService;
 
-    public FoodRecipeDto scrapeAndCreateNewFoodRecipe(String foodName) {
-        String permaLink = this.searchFoodRecipeUrl(foodName);
-        String recipe = this.scrapeUrl("https://www.yemek.com", permaLink);
-        return this.getFoodRecipe(recipe);
+    private final ChatGptService chatGptService;
+
+    public RecipeDto scrapeAndCreateNewRecipe(String foodName) {
+        String permaLink = this.searchRecipeUrl(foodName);
+        String recipeStr = this.scrapeUrl("https://www.yemek.com", permaLink);
+        RecipeDto recipeDto = this.getRecipe(recipeStr);
+        this.recipeService.save(recipeDto.convertToRecipe());
+        return recipeDto;
     }
 
-    public String searchFoodRecipeUrl(String foodName) {
+    public String searchRecipeUrl(String foodName) {
         StringBuilder fullUrl = new StringBuilder("https://zagorapi.yemek.com/search/recipe?query=");
         fullUrl.append(foodName);
         fullUrl.append("&start=0&limit=1");
@@ -77,34 +79,43 @@ public class ScrapeService {
         }
     }
 
-    public FoodRecipeDto getFoodRecipe(String script) {
+    public RecipeDto getRecipe(String script) {
         Map<String, Object> mappedScript = Util.convertJsonToMap(script);
-        FoodRecipeDto foodRecipeDto = new FoodRecipeDto();
-        foodRecipeDto.setRecipeName((String) mappedScript.get("name"));
-        foodRecipeDto.setImageUrl((String) Util.convertObjectToList(mappedScript.get("image")).get(0));
-        foodRecipeDto.setServesFor(Integer.parseInt((String) mappedScript.get("recipeYield")));
-        foodRecipeDto.setCookingTime(mappedScript.get("cookTime") != null ? Util.parseDuration((String) mappedScript.get("cookTime")) : "0 dakika");
-        foodRecipeDto.setPreparationTime(Util.parseDuration((String) mappedScript.get("prepTime")));
+
+        RecipeDto recipeDto = new RecipeDto();
+        recipeDto.setRecipeName((String) mappedScript.get("name"));
+        recipeDto.setImageUrl((String) Util.convertObjectToList(mappedScript.get("image")).get(0));
+        recipeDto.setServesFor(Integer.parseInt((String) mappedScript.get("recipeYield")));
+        recipeDto.setCookingTime(mappedScript.get("cookTime") != null ? Util.parseDuration((String) mappedScript.get("cookTime")) : "0 dakika");
+        recipeDto.setPreparationTime(Util.parseDuration((String) mappedScript.get("prepTime")));
+        recipeDto.setTotalTime(this.getTotalTime(mappedScript.get("cookTime") != null ? (String) mappedScript.get("cookTime") : "0M", (String) mappedScript.get("prepTime") ));
 
         List<List<String>> recipeIngredients = (List<List<String>>) mappedScript.get("recipeIngredient");
         HashMap<Integer, ArrayList<String>> ingredientsMap = getIngredientsMap(recipeIngredients);
-        foodRecipeDto.setIngredients(ingredientsMap);
+        recipeDto.setIngredients(ingredientsMap);
 
         List<List<String>> recipeInstructions = (List<List<String>>) mappedScript.get("recipeInstructions");
         HashMap<Integer, String> instructionsMap = getInstructionsMap(recipeInstructions);
-        foodRecipeDto.setInstructions(instructionsMap);
+        recipeDto.setInstructions(instructionsMap);
 
+        recipeDto.setDifficultyLevel(this.getDifficulty(recipeDto));
+
+        /*
         Map<String, Object> difficultyAndTerms = this.getDifficultyAndTerms(foodRecipeDto);
 
         foodRecipeDto.setDifficultyLevel(String.valueOf(difficultyAndTerms.get("difficulty")));
 
+         */
 //        if( Util.convertObjectToList(difficultyAndTerms.get("terms")).size() != 0 ){
+        /*
             Map<String, Object> termList = (Map<String, Object>) difficultyAndTerms.get("terms");
             HashMap<Integer, ArrayList<String>> terms = this.getTermsMap(termList);
             foodRecipeDto.setTerms(terms);
+
+         */
   //      }
 
-        return foodRecipeDto;
+        return recipeDto;
     }
 
     private HashMap<Integer, ArrayList<String>> getIngredientsMap(List<List<String>> recipeIngredients) {
@@ -113,7 +124,7 @@ public class ScrapeService {
         for (List<String> ingredientList : recipeIngredients) {
             for (String ingredient : ingredientList) {
                 ArrayList<String> ingredients = new ArrayList<>();
-                Pattern pattern = Pattern.compile("(.*?\\s(?:bardağı|adet|kaşığı|gram|paket|kase|diş))\\s*(.*)");
+                Pattern pattern = Pattern.compile("(.*?\\s(?:bardağı|adet|kaşığı|gram|paket|kase|diş|litre))\\s*(.*)");
                 Matcher matcher = pattern.matcher(ingredient);
 
                 if (matcher.find()) {
@@ -144,14 +155,25 @@ public class ScrapeService {
         return instructionMap;
     }
 
-    private Map<String, Object> getDifficultyAndTerms(FoodRecipeDto recipe) {
+    private Map<String, Object> getDifficultyAndTerms(RecipeDto recipe) {
         String chatGptResponse = this.chatGptService.getDifficultyLevelAndTerms(recipe);
         Map<String, Object> mappedChatGptResponse = Util.convertJsonToMap(chatGptResponse);
         return mappedChatGptResponse;
     }
 
+    private String getDifficulty(RecipeDto recipe) {
+        String chatGptResponse = this.chatGptService.getDifficultyLevel(recipe);
+        Map<String, Object> mappedChatGptResponse = Util.convertJsonToMap(chatGptResponse);
+        return String.valueOf(mappedChatGptResponse.get("difficulty"));
+    }
 
-    private HashMap<Integer, ArrayList<String>> getTermsMap(Map<String, Object> terms) {
+    public Map<String, Object> getTerms(RecipeDto recipe) {
+        String chatGptResponse = this.chatGptService.getTerms(recipe);
+        Map<String, Object> mappedChatGptResponse = Util.convertJsonToMap(chatGptResponse);
+        return mappedChatGptResponse;
+    }
+
+    public HashMap<Integer, ArrayList<String>> getTermsMap(Map<String, Object> terms) {
         HashMap<Integer, ArrayList<String>> termsMap = new HashMap<>();
         int termIndex = 0;
 
@@ -164,5 +186,11 @@ public class ScrapeService {
         }
         return termsMap;
     }
+
+    private String getTotalTime(String cookingTime, String preparationTime){
+        return Util.convertToMinutes(cookingTime) + Util.convertToMinutes(preparationTime) + " dakika";
+    }
+
+
 
 }

@@ -87,7 +87,23 @@ public class Util {
         return null;
     }
 
-    public static String translateDifficultyLevel(DifficultyLevel level){
+    public static int convertToMinutes(String duration) {
+        int hoursIndex = duration.indexOf("H");
+        int minutesIndex = duration.indexOf("M");
+
+        if (hoursIndex != -1) {
+            int hours = Integer.parseInt(duration.substring(2, hoursIndex));
+            return hours *  60;
+        }
+
+        if (minutesIndex != -1) {
+            return Integer.parseInt(duration.substring(2, minutesIndex));
+        }
+
+        return 0;
+    }
+
+    public static String translateDifficultyLevelToTurkish(DifficultyLevel level){
         switch (level){
             case EASY -> {
                 return "Kolay";
@@ -101,6 +117,24 @@ public class Util {
             }
             default -> {
                 return "Belirtilmemiş";
+            }
+        }
+    }
+
+    public static String translateDifficultyLevelToEnglish(String difficultyLevel){
+        switch (difficultyLevel.toLowerCase()){
+            case "kolay" -> {
+                return "EASY";
+            }
+            case "orta" ->
+            {
+                return "MEDIUM";
+            }
+            case "zor" -> {
+                return "HARD";
+            }
+            default -> {
+                return "NOT SPECIFIED";
             }
         }
     }

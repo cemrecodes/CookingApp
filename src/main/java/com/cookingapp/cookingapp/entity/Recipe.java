@@ -14,21 +14,25 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import java.time.OffsetDateTime;
+
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "food_recipe")
+@Table(name = "recipe")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
 @EqualsAndHashCode(of = {"id"})
 @ToString
-public class FoodRecipe {
+public class Recipe {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(length = 200)
+    private String imageUrl;
 
     @Column(length = 50)
     private String recipeName;
@@ -48,14 +52,14 @@ public class FoodRecipe {
     private String ingredients;
 
     @Lob
-    private String method;
+    private String instructions;
 
-    @Column
-    private OffsetDateTime createTime;
+    @Column(columnDefinition = "TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP")
+    private LocalDateTime createDate;
 
     private int score;
     @PrePersist
     public void prePersist() {
-        this.createTime = OffsetDateTime.now();
+        this.createDate = LocalDateTime.now();
     }
 }

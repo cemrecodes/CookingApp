@@ -1,11 +1,13 @@
 package com.cookingapp.cookingapp.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Data
+@AllArgsConstructor
 public class ChatGptRequest {
     private String model;
     private List<Message> messages;
