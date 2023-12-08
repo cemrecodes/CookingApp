@@ -3,7 +3,7 @@ package com.cookingapp.cookingapp.controller;
 import com.cookingapp.cookingapp.dto.RecipeDto;
 import com.cookingapp.cookingapp.entity.Recipe;
 import com.cookingapp.cookingapp.service.RecipeService;
-import com.cookingapp.cookingapp.service.ScrapeService;
+import com.cookingapp.cookingapp.service.impl.ScrapeServiceImp;
 import com.cookingapp.cookingapp.util.Util;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RecipeController {
 
-    private final ScrapeService scrapeService;
+    private final ScrapeServiceImp scrapeServiceImp;
 
     private final RecipeService recipeService;
 
@@ -28,7 +28,7 @@ public class RecipeController {
     public ResponseEntity scrapeAndCreateNewFoodRecipe(@RequestParam(required = true) String foodName){
         ResponseEntity result;
         foodName = Util.turkishCharsToEnglish(foodName);
-        RecipeDto recipe = this.scrapeService.scrapeAndCreateNewRecipe(foodName);
+        RecipeDto recipe = this.scrapeServiceImp.scrapeAndCreateNewRecipe(foodName);
         if (recipe != null) {
             result = ResponseEntity.ok(recipe);
         } else {

@@ -12,4 +12,7 @@ public interface RecipeRepository extends JpaRepository<Recipe, Long> {
     Recipe save(Recipe recipe);
     Recipe getRecipeById(Long id);
     List<Recipe> findAll();
+
+    Recipe findByRecipeName(String name);
+
 }

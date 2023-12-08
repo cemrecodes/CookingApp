@@ -1,14 +1,11 @@
 package com.cookingapp.cookingapp.service;
 
-import com.cookingapp.cookingapp.dto.MemberDto;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.cookingapp.cookingapp.entity.Member;
 
 import java.util.List;
 
 public interface MemberService {
-    MemberDto save(MemberDto memberDto);
+    Member save(Member member);
     void delete(Long id);
-    List<MemberDto> getAll();
-    Page<MemberDto> getAll(Pageable pageable);
+    List<Member> getAllMembers();
 }

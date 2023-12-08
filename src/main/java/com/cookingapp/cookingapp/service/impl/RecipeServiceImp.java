@@ -3,17 +3,16 @@ package com.cookingapp.cookingapp.service.impl;
 import com.cookingapp.cookingapp.entity.Recipe;
 import com.cookingapp.cookingapp.repo.RecipeRepository;
 import com.cookingapp.cookingapp.service.RecipeService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class RecipeServiceImp implements RecipeService {
 
-    @Autowired
-    private RecipeRepository recipeRepository;
-
+    private final RecipeRepository recipeRepository;
 
     @Override
     public Recipe save(Recipe recipe) {
@@ -28,5 +27,10 @@ public class RecipeServiceImp implements RecipeService {
     @Override
     public List<Recipe> getAllRecipe(){
         return this.recipeRepository.findAll();
+    }
+
+    @Override
+    public Recipe getRecipeByName(String name) {
+        return this.recipeRepository.findByRecipeName(name);
     }
 }

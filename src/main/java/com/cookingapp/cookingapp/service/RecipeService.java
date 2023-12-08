@@ -6,9 +6,13 @@ import java.util.List;
 
 public interface RecipeService {
 
-    public Recipe save(Recipe recipe);
+    Recipe save(Recipe recipe);
 
-    public Recipe getRecipeById(Long id);
+    Recipe getRecipeById(Long id);
 
-    public List<Recipe> getAllRecipe();
+    List<Recipe> getAllRecipe();
+
+    Recipe getRecipeByName(String recipe);
+
+
 }

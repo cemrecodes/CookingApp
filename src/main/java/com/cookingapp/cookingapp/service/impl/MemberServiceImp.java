@@ -5,8 +5,6 @@ import com.cookingapp.cookingapp.entity.Member;
 import com.cookingapp.cookingapp.repo.MemberRepository;
 import com.cookingapp.cookingapp.service.MemberService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,9 +16,11 @@ import java.util.List;
 public class MemberServiceImp implements MemberService {
 
     private final MemberRepository memberRepository;
+
+    /*
     @Override
     @Transactional
-    public MemberDto save(MemberDto memberDto) {
+    public Member save(MemberDto memberDto) {
         Member member = new Member();
         member.setEmail(memberDto.getEmail());
         member.setName(memberDto.getName());
@@ -42,26 +42,24 @@ public class MemberServiceImp implements MemberService {
         return memberDto;
     }
 
+     */
+
+    @Override
+    @Transactional
+    public Member save(Member member) {
+        return memberRepository.save(member);
+    }
+
     @Override
     public void delete(Long id) {
 
     }
 
     @Override
-    public List<MemberDto> getAll() {
-        List<Member> members = memberRepository.findAll();
-        List<MemberDto> memberDtos = new ArrayList<>();
-        members.forEach(it -> {
-                    MemberDto memberDto = new MemberDto();
-                    memberDto.setId(it.getId());
-                    memberDtos.add(memberDto);
-                }
-        );
-        return memberDtos;
+    public List<Member> getAllMembers() {
+        return memberRepository.findAll();
     }
 
-    @Override
-    public Page<MemberDto> getAll(Pageable pageable) {
-        return null;
-    }
+
+
 }
