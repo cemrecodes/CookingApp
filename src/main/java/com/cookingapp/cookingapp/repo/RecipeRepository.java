@@ -1,5 +1,6 @@
 package com.cookingapp.cookingapp.repo;
 
+import com.cookingapp.cookingapp.entity.Category;
 import com.cookingapp.cookingapp.entity.Recipe;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -13,6 +14,8 @@ public interface RecipeRepository extends JpaRepository<Recipe, Long> {
     Recipe getRecipeById(Long id);
     List<Recipe> findAll();
 
-    Recipe findByRecipeName(String name);
+    List<Recipe> findByRecipeName(String name);
+
+    List<Recipe> findByCategory(Category category);
 
 }

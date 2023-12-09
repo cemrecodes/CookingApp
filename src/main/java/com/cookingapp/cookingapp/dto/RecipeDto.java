@@ -1,5 +1,6 @@
 package com.cookingapp.cookingapp.dto;
 
+import com.cookingapp.cookingapp.entity.Category;
 import com.cookingapp.cookingapp.entity.DifficultyLevel;
 import com.cookingapp.cookingapp.entity.Recipe;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -21,6 +22,7 @@ public class RecipeDto {
     private String totalTime;
     private int servesFor;
     private String difficultyLevel;
+    private String category;
     private HashMap<Integer, ArrayList<String>> ingredients;
     private HashMap<Integer, String> instructions;
     private OffsetDateTime createTime;
@@ -45,6 +47,7 @@ public class RecipeDto {
         recipe.setPreparationTime(preparationTime);
         recipe.setServesFor(servesFor);
         recipe.setDifficultyLevel(DifficultyLevel.convert(difficultyLevel));
+        recipe.setCategory(Category.convert(category));
         recipe.setIngredients(createIngredientsString(ingredients));
         recipe.setInstructions(createInstructionsString(instructions));
         return recipe;

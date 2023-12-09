@@ -95,7 +95,7 @@ public class ScrapeServiceImp implements ScrapeService {
         recipeDto.setServesFor(Integer.parseInt((String) mappedScript.get("recipeYield")));
         recipeDto.setCookingTime(mappedScript.get("cookTime") != null ? Util.parseDuration((String) mappedScript.get("cookTime")) : "0 dakika");
         recipeDto.setPreparationTime(Util.parseDuration((String) mappedScript.get("prepTime")));
-        recipeDto.setTotalTime(this.getTotalTime(mappedScript.get("cookTime") != null ? (String) mappedScript.get("cookTime") : "0M", (String) mappedScript.get("prepTime") ));
+        recipeDto.setTotalTime(Util.getTotalTime(mappedScript.get("cookTime") != null ? (String) mappedScript.get("cookTime") : "0M", (String) mappedScript.get("prepTime") ));
 
         List<List<String>> recipeIngredients = (List<List<String>>) mappedScript.get("recipeIngredient");
         HashMap<Integer, ArrayList<String>> ingredientsMap = getIngredientsMap(recipeIngredients);
@@ -105,7 +105,10 @@ public class ScrapeServiceImp implements ScrapeService {
         HashMap<Integer, String> instructionsMap = getInstructionsMap(recipeInstructions);
         recipeDto.setInstructions(instructionsMap);
 
-        recipeDto.setDifficultyLevel(this.getDifficulty(recipeDto));
+        Map<String, Object> difficultyAndCategory = this.getDifficultyAndCategory(recipeDto);
+
+        recipeDto.setDifficultyLevel((String) difficultyAndCategory.get("difficulty"));
+        recipeDto.setCategory((String) difficultyAndCategory.get("category"));
 
         /*
         Map<String, Object> difficultyAndTerms = this.getDifficultyAndTerms(foodRecipeDto);
@@ -168,10 +171,9 @@ public class ScrapeServiceImp implements ScrapeService {
         return mappedChatGptResponse;
     }
 
-    private String getDifficulty(RecipeDto recipe) {
-        String chatGptResponse = this.chatGptService.getDifficultyLevel(recipe);
-        Map<String, Object> mappedChatGptResponse = Util.convertJsonToMap(chatGptResponse);
-        return String.valueOf(mappedChatGptResponse.get("difficulty"));
+    private Map<String, Object> getDifficultyAndCategory(RecipeDto recipe) {
+        String chatGptResponse = this.chatGptService.getDifficultyLevelAndCategory(recipe);
+        return Util.convertJsonToMap(chatGptResponse);
     }
 
     @Override
@@ -196,7 +198,4 @@ public class ScrapeServiceImp implements ScrapeService {
         return termsMap;
     }
 
-    private String getTotalTime(String cookingTime, String preparationTime){
-        return Util.convertToMinutes(cookingTime) + Util.convertToMinutes(preparationTime) + " dakika";
-    }
 }

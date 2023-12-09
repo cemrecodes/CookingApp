@@ -62,10 +62,27 @@ public class ChatGptServiceImp implements ChatGptService {
     }
 
     @Override
-    public String getDifficultyLevel(RecipeDto recipe) {
-        Message systemMessage = new Message("system", "Aşağıdaki yemek tarifinin zorluğunu belirle(kolay,orta,zor). Cevabı dictionary şeklinde ver, zorluk derecesi key'i \"difficulty\" olsun.");
+    public String getDifficultyLevelAndCategory(RecipeDto recipe) {
+        Message systemMessage = new Message("system", "Aşağıdaki yemek tarifinin zorluğunu (kolay,orta,zor) ve kategorisini (çorba, ana yemek, tatlı, içecek) belirle." +
+                "Cevabı dictionary şeklinde ver, zorluk derecesi key'i \"difficulty\", kategori keyi ise \"category\" olsun.");
+        Message exampleUserMessage = new Message("user", " Tarif: Mozaik Kek" +
+                " Yumurta sarılarını ve şekerini karıştırarak iyice çırpın." +
+                " Unu ekleyip karışımı pürüzsüz olana kadar karıştırın." +
+                " Sütü ekleyip karışımı iyice çırpın." +
+                " Karışımı benmari usulüyle, yani kaynar su dolu bir tencerenin üzerine oturtulmuş bir kap içinde sürekli karıştırarak pişirin." +
+                " Karışım koyu bir kıvam aldığında ocaktan alın ve soğumaya bırakın." +
+                " Soğuyan karışıma isteğe bağlı olarak vanilin veya vanilin şekeri ekleyin." +
+                " Yumurta beyazlarını köpük haline gelene kadar çırpın." +
+                " Yumurta beyazlarını hazırlanan karışıma yavaşça ekleyip spatula ile hafifçe karıştırın." +
+                " Hazırlanan karışımı sufle kaplarına paylaştırın." +
+                " Önceden ısıtılmış 180 derece fırında üzeri iyice kızarana kadar pişirin (yaklaşık 15-20 dakika).)");
+        Message exampleAssistantMessage = new Message("assistant", "{ \"difficulty\": \"kolay\", " +
+                "\"category\": \"tatlı\" }");
+
         List<Message> messages = new ArrayList<>();
         messages.add(systemMessage);
+        messages.add(exampleUserMessage);
+        messages.add(exampleAssistantMessage);
         messages.add(new Message("user", "Tarif: " + recipe.toStringForChatGpt()) );
         ChatGptRequest request = new ChatGptRequest(model, messages);
         ChatGptResponse chatGptResponse = template.postForObject(apiUrl, request, ChatGptResponse.class);

@@ -15,6 +15,14 @@ public enum DifficultyLevel {
             default -> throw new IllegalArgumentException("Geçersiz zorluk seviyesi: " + difficultyLevel);
         };
     }
+
+    public static String toString(DifficultyLevel difficultyLevel){
+        return switch (difficultyLevel) {
+            case EASY -> "kolay";
+            case MEDIUM -> "orta";
+            case HARD -> "zor";
+        };
+    }
 }
 
 

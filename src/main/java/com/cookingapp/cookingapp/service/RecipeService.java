@@ -12,7 +12,9 @@ public interface RecipeService {
 
     List<Recipe> getAllRecipe();
 
-    Recipe getRecipeByName(String recipe);
+    List<Recipe> getRecipeByName(String recipe);
+
+    List<Recipe> getRecipesByCategory(String category);
 
 
 }

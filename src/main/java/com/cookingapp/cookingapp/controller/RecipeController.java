@@ -8,6 +8,7 @@ import com.cookingapp.cookingapp.util.Util;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,9 +25,16 @@ public class RecipeController {
 
     private final RecipeService recipeService;
 
-    @PostMapping(value = "/search")
+    @GetMapping(value = "/search")
     public ResponseEntity scrapeAndCreateNewFoodRecipe(@RequestParam(required = true) String foodName){
         ResponseEntity result;
+        foodName = Util.removeSpaces(foodName);
+        List<Recipe> foundRecipe = recipeService.getRecipeByName(Util.splitByDashAndUpperCaseInitials(foodName));
+
+        if (!foundRecipe.isEmpty()) {
+            return ResponseEntity.ok(foundRecipe.get(0).toDto());
+        }
+
         foodName = Util.turkishCharsToEnglish(foodName);
         RecipeDto recipe = this.scrapeServiceImp.scrapeAndCreateNewRecipe(foodName);
         if (recipe != null) {
@@ -48,6 +56,11 @@ public class RecipeController {
 
          */
         List<Recipe> recipeList = this.recipeService.getAllRecipe();
-        return ResponseEntity.ok(recipeList);
+        return ResponseEntity.ok(recipeList.stream().map(Recipe::toDto));
+    }
+
+    @GetMapping(value="/category/{category}")
+    public ResponseEntity getCategory(@PathVariable String category) {
+        return ResponseEntity.ok(recipeService.getRecipesByCategory(category).stream().map(Recipe::toDto));
     }
 }

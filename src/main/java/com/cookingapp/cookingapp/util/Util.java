@@ -4,18 +4,25 @@ import com.cookingapp.cookingapp.entity.DifficultyLevel;
 import com.google.gson.Gson;
 import org.springframework.stereotype.Component;
 
+import javax.swing.plaf.IconUIResource;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Component
 public class Util {
     public static String removeExtraSpaces(String input) {
         // Replace multiple consecutive spaces with a single space
         return input.replaceAll("\\s+", " ");
+    }
+
+    public static String removeSpaces(String input){
+        return input.replace(" ", "");
     }
 
     public static String addNewlineAfterSentenceEnds(String input) {
@@ -54,13 +61,14 @@ public class Util {
     }
 
     public static int extractNumber(String text) {
-        String[] words = text.split("\\s+");
-        for (String word : words) {
-            if (word.matches("\\d+")) {
-                return Integer.parseInt(word);
-            }
+        Pattern pattern = Pattern.compile("\\s*(\\d+)\\s*");
+        Matcher matcher = pattern.matcher(text);
+
+        if (matcher.find()) {
+            String numberStr = matcher.group(1);
+            return Integer.parseInt(numberStr);
         }
-        return 0; // Varsayılan değer, sayı bulunamazsa
+        return 0;
     }
 
     public static String parseDuration(String duration) {
@@ -88,16 +96,12 @@ public class Util {
     }
 
     public static int convertToMinutes(String duration) {
-        int hoursIndex = duration.indexOf("H");
-        int minutesIndex = duration.indexOf("M");
-
-        if (hoursIndex != -1) {
-            int hours = Integer.parseInt(duration.substring(2, hoursIndex));
+        if (duration.contains("H") || duration.contains("saat")){
+            int hours = extractNumber(duration);
             return hours *  60;
         }
-
-        if (minutesIndex != -1) {
-            return Integer.parseInt(duration.substring(2, minutesIndex));
+        else if(duration.contains("M") || duration.contains("dakika")){
+            return extractNumber(duration);
         }
 
         return 0;
@@ -139,6 +143,26 @@ public class Util {
         }
     }
 
+    public static String translateCategoryToEnglish(String category){
+        switch(category.toLowerCase()){
+            case "çorba" -> {
+                return "SOUP";
+            }
+            case "ana yemek" -> {
+                return "MAIN DISH";
+            }
+            case "tatlı" -> {
+                return "DESSERT";
+            }
+            case "içecek" -> {
+                return "DRINK";
+            }
+            default -> {
+                return "NOT SPECIFIED";
+            }
+        }
+    }
+
     public static List<?> convertObjectToList(Object obj) {
         List<?> list = new ArrayList<>();
         if (obj.getClass().isArray()) {
@@ -147,6 +171,22 @@ public class Util {
             list = new ArrayList<>((Collection<?>)obj);
         }
         return list;
+    }
+
+    public static String getTotalTime(String cookingTime, String preparationTime){
+        return Util.convertToMinutes(cookingTime) + Util.convertToMinutes(preparationTime) + " dakika";
+    }
+
+    public static String splitByDashAndUpperCaseInitials(String foodName){
+        StringBuilder result = new StringBuilder();
+
+        String[] words = foodName.split("-");
+        for (String word: words) {
+            String upperCased = word.substring(0, 1).toUpperCase() + word.substring(1);
+            result.append(upperCased).append(" ");
+        }
+        result.setLength(result.length() - 1);
+        return result.toString();
     }
 
 }
