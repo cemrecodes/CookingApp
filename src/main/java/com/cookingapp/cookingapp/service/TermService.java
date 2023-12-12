@@ -11,7 +11,7 @@ public interface TermService {
 
     void delete(Term term);
 
-    Term getByWord(String word);
+    Term getByTerm(String term);
 
     List<Term> getAllTerms();
     

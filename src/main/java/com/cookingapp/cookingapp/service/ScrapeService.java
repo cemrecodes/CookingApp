@@ -10,8 +10,8 @@ public interface ScrapeService {
 
     RecipeDto scrapeAndCreateNewRecipe(String foodName);
     String searchRecipeUrl(String foodName);
-    String scrapeUrl(String url, String permaLink);
-    RecipeDto getRecipe(String script);
+    HashMap<String, Object> scrapeUrl(String url, String permaLink);
+    RecipeDto getRecipe(HashMap<String, Object> recipeMap);
 
     /*
     private HashMap<Integer, ArrayList<String>> getIngredientsMap(List<List<String>> recipeIngredients);

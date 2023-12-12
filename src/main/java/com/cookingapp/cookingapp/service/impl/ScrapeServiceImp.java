@@ -1,7 +1,10 @@
 package com.cookingapp.cookingapp.service.impl;
 
 import com.cookingapp.cookingapp.dto.RecipeDto;
+import com.cookingapp.cookingapp.entity.Ingredient;
+import com.cookingapp.cookingapp.entity.Recipe;
 import com.cookingapp.cookingapp.service.ChatGptService;
+import com.cookingapp.cookingapp.service.IngredientService;
 import com.cookingapp.cookingapp.service.RecipeService;
 import com.cookingapp.cookingapp.service.ScrapeService;
 import com.cookingapp.cookingapp.util.Util;
@@ -34,12 +37,21 @@ public class ScrapeServiceImp implements ScrapeService {
 
     private final ChatGptService chatGptService;
 
+    private final IngredientService ingredientService;
+
+    private final String ingredientAmountSeperators = "bardağı|adet|kaşığı|gram|paket|kase|diş|litre|yaprak|mililitre|ml.|paket|tutam";
+
     @Override
     public RecipeDto scrapeAndCreateNewRecipe(String foodName) {
         String permaLink = this.searchRecipeUrl(foodName);
-        String recipeStr = this.scrapeUrl("https://www.yemek.com", permaLink);
+        HashMap<String, Object> recipeStr = this.scrapeUrl("https://www.yemek.com", permaLink);
         RecipeDto recipeDto = this.getRecipe(recipeStr);
-        this.recipeService.save(recipeDto.convertToRecipe());
+        Recipe recipe = this.recipeService.save(recipeDto.convertToRecipe());
+        List<Ingredient> ingredients = this.ingredientService.processIngredientsHashMap(recipeDto.getIngredients(), recipe);
+        for(Ingredient ingredient: ingredients){
+            this.ingredientService.save(ingredient);
+        }
+        recipeDto.setId(recipe.getId());
         return recipeDto;
     }
 
@@ -68,17 +80,31 @@ public class ScrapeServiceImp implements ScrapeService {
     }
 
     @Override
-    public String scrapeUrl(String url, String permaLink) {
+    public HashMap<String, Object> scrapeUrl(String url, String permaLink) {
         StringBuilder fullUrl = new StringBuilder(url);
         fullUrl.append(permaLink);
+        HashMap<String, Object> result = new HashMap<>();
 
         try {
             Document doc = Jsoup.connect(String.valueOf(fullUrl)).get();
+
+            Element h3Element = doc.select("h3:contains(KAÇ KİŞİLİK)").first();
+
+            if (h3Element != null) {
+                Element spanElement = h3Element.nextElementSibling().select("span").first();
+                if (spanElement != null) {
+                    String spanText = spanElement.text();
+                    result.put("servesFor", spanText);
+                }
+            }
+
             Elements elements = doc.getElementsByTag("script");
             Element scriptElement = elements.first();
 
             assert scriptElement != null;
-            return scriptElement.data();
+            result.put("recipe", scriptElement.data());
+
+            return result;
         } catch (Exception e) {
             logger.error("Couldn't scrape url: {}", e.getMessage());
             return null;
@@ -86,13 +112,13 @@ public class ScrapeServiceImp implements ScrapeService {
     }
 
     @Override
-    public RecipeDto getRecipe(String script) {
-        Map<String, Object> mappedScript = Util.convertJsonToMap(script);
+    public RecipeDto getRecipe(HashMap<String, Object> recipeMap) {
+        Map<String, Object> mappedScript = Util.convertJsonToMap((String) recipeMap.get("recipe"));
 
         RecipeDto recipeDto = new RecipeDto();
         recipeDto.setRecipeName((String) mappedScript.get("name"));
         recipeDto.setImageUrl((String) Util.convertObjectToList(mappedScript.get("image")).get(0));
-        recipeDto.setServesFor(Integer.parseInt((String) mappedScript.get("recipeYield")));
+        recipeDto.setServesFor((String) recipeMap.get("servesFor"));
         recipeDto.setCookingTime(mappedScript.get("cookTime") != null ? Util.parseDuration((String) mappedScript.get("cookTime")) : "0 dakika");
         recipeDto.setPreparationTime(Util.parseDuration((String) mappedScript.get("prepTime")));
         recipeDto.setTotalTime(Util.getTotalTime(mappedScript.get("cookTime") != null ? (String) mappedScript.get("cookTime") : "0M", (String) mappedScript.get("prepTime") ));
@@ -134,7 +160,7 @@ public class ScrapeServiceImp implements ScrapeService {
         for (List<String> ingredientList : recipeIngredients) {
             for (String ingredient : ingredientList) {
                 ArrayList<String> ingredients = new ArrayList<>();
-                Pattern pattern = Pattern.compile("(.*?\\s(?:bardağı|adet|kaşığı|gram|paket|kase|diş|litre))\\s*(.*)");
+                Pattern pattern = Pattern.compile("(.*?\\s(?:" + ingredientAmountSeperators + "))\\s*(.*)");
                 Matcher matcher = pattern.matcher(ingredient);
 
                 if (matcher.find()) {
@@ -157,7 +183,9 @@ public class ScrapeServiceImp implements ScrapeService {
                 Matcher matcher = pattern.matcher(instruction);
 
                 while (matcher.find()) {
-                    instructionMap.put(instructionIndex, Util.removeExtraSpaces(matcher.group(1)));
+                    String instructionToBeAdded = Util.removeTags(matcher.group(1));
+                    // instructionMap.put(instructionIndex, Util.removeExtraSpaces(matcher.group(1)));
+                    instructionMap.put(instructionIndex, instructionToBeAdded);
                 }
                 instructionIndex += 1;
             }

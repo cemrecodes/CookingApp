@@ -1,6 +1,7 @@
 package com.cookingapp.cookingapp.controller;
 
 import com.cookingapp.cookingapp.dto.RecipeDto;
+import com.cookingapp.cookingapp.entity.Category;
 import com.cookingapp.cookingapp.entity.Recipe;
 import com.cookingapp.cookingapp.service.RecipeService;
 import com.cookingapp.cookingapp.service.impl.ScrapeServiceImp;
@@ -20,6 +21,7 @@ import java.util.List;
 @RequestMapping(value = "/v1/recipes")
 @RequiredArgsConstructor
 public class RecipeController {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScrapeServiceImp.class);
 
     private final ScrapeServiceImp scrapeServiceImp;
 
@@ -27,6 +29,7 @@ public class RecipeController {
 
     @GetMapping(value = "/search")
     public ResponseEntity scrapeAndCreateNewFoodRecipe(@RequestParam(required = true) String foodName){
+        logger.info("/v1/recipes/search endpoint has been called with @RequestParam = {}" , foodName);
         ResponseEntity result;
         foodName = Util.removeSpaces(foodName);
         List<Recipe> foundRecipe = recipeService.getRecipeByName(Util.splitByDashAndUpperCaseInitials(foodName));
@@ -47,20 +50,34 @@ public class RecipeController {
 
     @GetMapping
     public ResponseEntity getAllRecipes(){
-        // TODO ENTITY TO DTO
-        /*
-        List<RecipeDto> recipeList = this.recipeService.getAllRecipe()
-                .stream()
-                .map(recipe -> modelMapper.map(recipe, RecipeDto.class))
-                .collect(Collectors.toList());
-
-         */
+        logger.info("/v1/recipes endpoint has been called");
         List<Recipe> recipeList = this.recipeService.getAllRecipe();
         return ResponseEntity.ok(recipeList.stream().map(Recipe::toDto));
     }
 
     @GetMapping(value="/category/{category}")
     public ResponseEntity getCategory(@PathVariable String category) {
+        logger.info("/v1/recipes/category endpoint has been called with @PathVariable = {}" , category);
+        switch (category){
+            case "corba": {
+                category = "çorba";
+                break;
+            }
+            case "ana-yemek": {
+                category = "ana yemek";
+                break;
+            }
+            case "tatli": {
+                category = "tatlı";
+                break;
+            }
+            case "icecek": {
+                category = "içecek";
+                break;
+            }
+            default:
+                category = null;
+        }
         return ResponseEntity.ok(recipeService.getRecipesByCategory(category).stream().map(Recipe::toDto));
     }
 }

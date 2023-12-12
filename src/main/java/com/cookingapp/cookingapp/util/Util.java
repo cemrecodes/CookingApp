@@ -17,7 +17,6 @@ import java.util.regex.Pattern;
 @Component
 public class Util {
     public static String removeExtraSpaces(String input) {
-        // Replace multiple consecutive spaces with a single space
         return input.replaceAll("\\s+", " ");
     }
 
@@ -26,15 +25,11 @@ public class Util {
     }
 
     public static String addNewlineAfterSentenceEnds(String input) {
-        // Split the input string into sentences based on common sentence-ending punctuation
         String[] sentences = input.split("[.!?]\\s*");
-
-        // Join the sentences with "\n" added after each sentence end
         return String.join("\n", sentences);
     }
 
     public static String[] convertStringToArray(String input) {
-        // Split the input string using "\n" as the separator
         return input.split("\\s*\\n\\s*");
     }
 
@@ -48,7 +43,7 @@ public class Util {
             return null;
         }
 
-        str = str.toLowerCase(); // Metni küçük harfe çevir
+        str = str.toLowerCase();
 
         str = str.replace("ı", "i");
         str = str.replace("ğ", "g");
@@ -72,30 +67,41 @@ public class Util {
     }
 
     public static String parseDuration(String duration) {
-        int hoursIndex = duration.indexOf("H");
-        int minutesIndex = duration.indexOf("M");
+        Pattern pattern = Pattern.compile("PT(\\d+(\\.\\d+)?H)?(\\d+(\\.\\d+)?M)?");
 
-        int hours = 0;
-        int minutes = 0;
+        Matcher matcher = pattern.matcher(duration);
 
-        if (hoursIndex != -1) {
-            hours = Integer.parseInt(duration.substring(2, hoursIndex));
-            return hours + " saat ";
-        }
+        if (matcher.matches()) {
+            String group1 = matcher.group(1);
+            String group3 = matcher.group(3);
 
-        if (minutesIndex != -1) {
-            if (hoursIndex != -1) {
-                minutes = Integer.parseInt(duration.substring(hoursIndex + 1, minutesIndex));
-            } else {
-                minutes = Integer.parseInt(duration.substring(2, minutesIndex));
+            if (group1 != null && !group1.isEmpty()) {
+                double hours = Double.parseDouble(group1.replace("H", ""));
+                int minutes = (int) Math.round(hours * 60);
+                if(minutes >= 60)
+                    return minutes/60 + " saat " + minutes%60 + " dakika";
+                else
+                    return minutes + " dakika";
+            } else if (group3 != null && !group3.isEmpty()) {
+                return group3.replace("M", "") + " dakika";
             }
-            return minutes + " dakika";
         }
 
         return null;
     }
 
     public static int convertToMinutes(String duration) {
+        if(duration.contains("saat") && duration.contains("dakika")){
+            String pattern = "(\\d+) saat (\\d+) dakika";
+            Pattern regex = Pattern.compile(pattern);
+            Matcher matcher = regex.matcher(duration);
+            if (matcher.find()) {
+                String hours = matcher.group(1);
+                String minutes = matcher.group(2);
+                return extractNumber(hours) * 60 + extractNumber(minutes);
+            }
+        }
+
         if (duration.contains("H") || duration.contains("saat")){
             int hours = extractNumber(duration);
             return hours *  60;
@@ -187,6 +193,19 @@ public class Util {
         }
         result.setLength(result.length() - 1);
         return result.toString();
+    }
+
+    public static String removeTags(String instruction) {
+        if (instruction == null || instruction.isEmpty()) {
+            return instruction;
+        }
+
+        String cleanedText = instruction.trim().replaceAll("\\s+", " ");
+
+        String htmlTagPattern = "<[^>]*>";
+        Pattern pattern = Pattern.compile(htmlTagPattern);
+        Matcher matcher = pattern.matcher(cleanedText);
+        return matcher.replaceAll("");
     }
 
 }

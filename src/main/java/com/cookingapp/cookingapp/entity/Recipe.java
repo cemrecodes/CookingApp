@@ -1,13 +1,16 @@
 package com.cookingapp.cookingapp.entity;
 import com.cookingapp.cookingapp.dto.RecipeDto;
 import com.cookingapp.cookingapp.util.Util;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -44,13 +47,14 @@ public class Recipe {
     @Column(length = 50)
     private String recipeName;
 
-    @Column(length = 10)
+    @Column(length = 20)
     private String cookingTime;
 
-    @Column(length = 10)
+    @Column(length = 20)
     private String preparationTime;
 
-    private int servesFor;
+    @Column(length = 20)
+    private String servesFor;
 
     @Enumerated
     private DifficultyLevel difficultyLevel;
@@ -58,8 +62,8 @@ public class Recipe {
     @Enumerated
     private Category category;
 
-    @Lob
-    private String ingredients;
+    @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Ingredient> ingredients;
 
     @Lob
     private String instructions;
@@ -68,6 +72,8 @@ public class Recipe {
     private LocalDateTime createDate;
 
     private int score;
+
+    private boolean termsAdded;
     @PrePersist
     public void prePersist() {
         this.createDate = LocalDateTime.now();
@@ -92,6 +98,22 @@ public class Recipe {
 
     private HashMap<Integer, ArrayList<String>> convertIngredients(){
         HashMap<Integer, ArrayList<String>> ingredientsMap = new HashMap<>();
+
+        int ingredientIndex = 0;
+        for (Ingredient ingredient: ingredients) {
+            ArrayList<String> ingredients = new ArrayList<>();
+            ingredients.add(ingredient.getIngredient());
+            ingredients.add(ingredient.getAmount());
+            ingredientsMap.put(ingredientIndex, ingredients);
+            ingredientIndex++;
+        }
+
+        return ingredientsMap;
+    }
+
+    /*
+    private HashMap<Integer, ArrayList<String>> convertIngredients(){
+        HashMap<Integer, ArrayList<String>> ingredientsMap = new HashMap<>();
         String[] splittedByComma = ingredients.split(" ,");
 
         int ingredientIndex = 0;
@@ -110,6 +132,8 @@ public class Recipe {
 
         return ingredientsMap;
     }
+
+     */
     private HashMap<Integer, String> convertInstructions(){
         HashMap<Integer, String> instructionMap = new HashMap<>();
         String[] splittedByDot = instructions.split("\\.");
@@ -117,26 +141,13 @@ public class Recipe {
         int instructionIndex = 0;
         for (String instruction : splittedByDot) {
             if(!instruction.equals(" ")) {
-                if(instruction.contains("<p>")) {
-                    instruction = removeTags(instruction);
-                }
+                instruction = Util.removeTags(instruction);
                 instructionMap.put(instructionIndex, Util.removeExtraSpaces(instruction));
                 instructionIndex += 1;
             }
 
         }
         return instructionMap;
-    }
-
-    private String removeTags(String instruction) {
-        if (instruction == null || instruction.isEmpty()) {
-            return instruction;
-        }
-
-        String htmlTagPattern = "<.*?>";
-        Pattern pattern = Pattern.compile(htmlTagPattern);
-        Matcher matcher = pattern.matcher(instruction);
-        return matcher.replaceAll("");
     }
 
     private static String removeComma(String ingredient) {

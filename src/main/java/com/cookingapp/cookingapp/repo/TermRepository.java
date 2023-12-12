@@ -11,7 +11,7 @@ public interface TermRepository extends JpaRepository<Term, Long> {
 
     Term save(Term term);
     void delete(Term term);
-    Term getByWord(String word);
+    Term getByTerm(String word);
     Term getById(Long id);
     List<Term> findAll();
 

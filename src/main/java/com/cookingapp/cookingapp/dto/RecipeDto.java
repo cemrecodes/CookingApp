@@ -20,7 +20,7 @@ public class RecipeDto {
     private String cookingTime;
     private String preparationTime;
     private String totalTime;
-    private int servesFor;
+    private String servesFor;
     private String difficultyLevel;
     private String category;
     private HashMap<Integer, ArrayList<String>> ingredients;
@@ -48,8 +48,9 @@ public class RecipeDto {
         recipe.setServesFor(servesFor);
         recipe.setDifficultyLevel(DifficultyLevel.convert(difficultyLevel));
         recipe.setCategory(Category.convert(category));
-        recipe.setIngredients(createIngredientsString(ingredients));
+        // recipe.setIngredients(createIngredientsString(ingredients));
         recipe.setInstructions(createInstructionsString(instructions));
+        recipe.setTermsAdded(false);
         return recipe;
     }
 
