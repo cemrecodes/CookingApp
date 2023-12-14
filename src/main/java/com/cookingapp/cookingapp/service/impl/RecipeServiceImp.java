@@ -24,7 +24,7 @@ public class RecipeServiceImp implements RecipeService {
 
     @Override
     public Recipe getRecipeById(Long id) {
-        return null;
+        return this.recipeRepository.getRecipeById(id);
     }
 
     @Override

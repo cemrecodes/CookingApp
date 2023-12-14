@@ -1,7 +1,6 @@
 package com.cookingapp.cookingapp.controller;
 
 import com.cookingapp.cookingapp.dto.RecipeDto;
-import com.cookingapp.cookingapp.entity.Category;
 import com.cookingapp.cookingapp.entity.Recipe;
 import com.cookingapp.cookingapp.service.RecipeService;
 import com.cookingapp.cookingapp.service.impl.ScrapeServiceImp;
@@ -10,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -79,5 +77,17 @@ public class RecipeController {
                 category = null;
         }
         return ResponseEntity.ok(recipeService.getRecipesByCategory(category).stream().map(Recipe::toDto));
+    }
+
+    @GetMapping(value = "/{id}")
+    public ResponseEntity getRecipe(@PathVariable Long id){
+        logger.info("/v1/recipes/{id} endpoint has been called with @PathVariable = {}" , id);
+        Recipe recipe = recipeService.getRecipeById(id);
+        if( recipe != null ){
+            return ResponseEntity.ok(recipeService.getRecipeById(id).toDto());
+        }
+        else{
+            return ResponseEntity.noContent().build();
+        }
     }
 }

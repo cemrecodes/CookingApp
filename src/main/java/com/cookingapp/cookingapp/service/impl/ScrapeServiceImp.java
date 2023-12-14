@@ -39,7 +39,7 @@ public class ScrapeServiceImp implements ScrapeService {
 
     private final IngredientService ingredientService;
 
-    private final String ingredientAmountSeperators = "bardağı|adet|kaşığı|gram|paket|kase|diş|litre|yaprak|mililitre|ml.|paket|tutam";
+    private final String ingredientAmountSeperators = "bardağı|adet|kaşığı|gram|paket|kase|diş|litre|yaprak|mililitre|ml.|paket|tutam|demet";
 
     @Override
     public RecipeDto scrapeAndCreateNewRecipe(String foodName) {
