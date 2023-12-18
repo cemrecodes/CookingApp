@@ -2,6 +2,7 @@ package com.cookingapp.cookingapp.util;
 
 import com.cookingapp.cookingapp.entity.DifficultyLevel;
 import com.google.gson.Gson;
+import java.lang.reflect.Array;
 import org.springframework.stereotype.Component;
 
 import javax.swing.plaf.IconUIResource;
@@ -16,25 +17,18 @@ import java.util.regex.Pattern;
 
 @Component
 public class Util {
+
     public static String removeExtraSpaces(String input) {
         return input.replaceAll("\\s+", " ");
     }
 
-    public static String removeSpaces(String input){
+    public static String removeSpaces(String input) {
         return input.replace(" ", "");
     }
 
-    public static String addNewlineAfterSentenceEnds(String input) {
-        String[] sentences = input.split("[.!?]\\s*");
-        return String.join("\n", sentences);
-    }
-
-    public static String[] convertStringToArray(String input) {
-        return input.split("\\s*\\n\\s*");
-    }
-
     public static Map<String, Object> convertJsonToMap(String jsonString) {
-        Type mapType = com.google.gson.reflect.TypeToken.getParameterized(Map.class, String.class, Object.class).getType();
+        Type mapType = com.google.gson.reflect.TypeToken.getParameterized(Map.class, String.class, Object.class)
+            .getType();
         return new Gson().fromJson(jsonString, mapType);
     }
 
@@ -78,8 +72,8 @@ public class Util {
             if (group1 != null && !group1.isEmpty()) {
                 double hours = Double.parseDouble(group1.replace("H", ""));
                 int minutes = (int) Math.round(hours * 60);
-                if(minutes >= 60)
-                    return minutes/60 + " saat " + minutes%60 + " dakika";
+                if (minutes >= 60)
+                    return minutes / 60 + " saat " + minutes % 60 + " dakika";
                 else
                     return minutes + " dakika";
             } else if (group3 != null && !group3.isEmpty()) {
@@ -91,7 +85,7 @@ public class Util {
     }
 
     public static int convertToMinutes(String duration) {
-        if(duration.contains("saat") && duration.contains("dakika")){
+        if (duration.contains("saat") && duration.contains("dakika")) {
             String pattern = "(\\d+) saat (\\d+) dakika";
             Pattern regex = Pattern.compile(pattern);
             Matcher matcher = regex.matcher(duration);
@@ -102,24 +96,22 @@ public class Util {
             }
         }
 
-        if (duration.contains("H") || duration.contains("saat")){
+        if (duration.contains("H") || duration.contains("saat")) {
             int hours = extractNumber(duration);
-            return hours *  60;
-        }
-        else if(duration.contains("M") || duration.contains("dakika")){
+            return hours * 60;
+        } else if (duration.contains("M") || duration.contains("dakika")) {
             return extractNumber(duration);
         }
 
         return 0;
     }
 
-    public static String translateDifficultyLevelToTurkish(DifficultyLevel level){
-        switch (level){
+    public static String translateDifficultyLevelToTurkish(DifficultyLevel level) {
+        switch (level) {
             case EASY -> {
                 return "Kolay";
             }
-            case MEDIUM ->
-            {
+            case MEDIUM -> {
                 return "Orta";
             }
             case HARD -> {
@@ -131,13 +123,12 @@ public class Util {
         }
     }
 
-    public static String translateDifficultyLevelToEnglish(String difficultyLevel){
-        switch (difficultyLevel.toLowerCase()){
+    public static String translateDifficultyLevelToEnglish(String difficultyLevel) {
+        switch (difficultyLevel.toLowerCase()) {
             case "kolay" -> {
                 return "EASY";
             }
-            case "orta" ->
-            {
+            case "orta" -> {
                 return "MEDIUM";
             }
             case "zor" -> {
@@ -149,8 +140,8 @@ public class Util {
         }
     }
 
-    public static String translateCategoryToEnglish(String category){
-        switch(category.toLowerCase()){
+    public static String translateCategoryToEnglish(String category) {
+        switch (category.toLowerCase()) {
             case "çorba" -> {
                 return "SOUP";
             }
@@ -172,22 +163,22 @@ public class Util {
     public static List<?> convertObjectToList(Object obj) {
         List<?> list = new ArrayList<>();
         if (obj.getClass().isArray()) {
-            list = Arrays.asList((Object[])obj);
+            list = Arrays.asList((Object[]) obj);
         } else if (obj instanceof Collection) {
-            list = new ArrayList<>((Collection<?>)obj);
+            list = new ArrayList<>((Collection<?>) obj);
         }
         return list;
     }
 
-    public static String getTotalTime(String cookingTime, String preparationTime){
+    public static String getTotalTime(String cookingTime, String preparationTime) {
         return Util.convertToMinutes(cookingTime) + Util.convertToMinutes(preparationTime) + " dakika";
     }
 
-    public static String splitByDashAndUpperCaseInitials(String foodName){
+    public static String splitByDashAndUpperCaseInitials(String foodName) {
         StringBuilder result = new StringBuilder();
 
         String[] words = foodName.split("-");
-        for (String word: words) {
+        for (String word : words) {
             String upperCased = word.substring(0, 1).toUpperCase() + word.substring(1);
             result.append(upperCased).append(" ");
         }
@@ -208,22 +199,34 @@ public class Util {
         return matcher.replaceAll("");
     }
 
+
+    // TODO yeri değiştirilebilir
     public static String findPrepOrCookTime(String instruction) {
-        String regex = "(\\d+)\\s+(dakika|saat)";
+        String regex = "((\\d+,\\d+)|(\\d+))\\s+(dakika|saat)";
 
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(instruction);
 
         if (matcher.find()) {
-            String timeStr = matcher.group(1);
-            if(matcher.group(2).equals("saat")){
-                return (Integer.parseInt(matcher.group(1)) * 60) + " dakika";
+            String timeStr = matcher.group(0);
+            if (matcher.group(2) != null && matcher.group(2).equals("saat")) {
+                double hours = Double.parseDouble(timeStr.replace(",", "."));
+                int minutes = (int) (hours * 60);
+                return minutes + " dakika";
+            } else if(matcher.group(4) != null && matcher.group(4).equals("dakika")){
+                return Integer.parseInt(matcher.group(1)) + " dakika";
             }
-            else
-                return Integer.parseInt(timeStr) + " dakika";
-        } else {
-            return null;
         }
+        return null;
+    }
+
+    public static String addNewlineAfterSentenceEnds(String input) {
+        String[] sentences = input.split("[.!?]\\s*");
+        return String.join("\n", sentences);
+    }
+
+    public static String[] convertStringToArray(String input) {
+        return input.split("\\s*\\n\\s*");
     }
 
 }

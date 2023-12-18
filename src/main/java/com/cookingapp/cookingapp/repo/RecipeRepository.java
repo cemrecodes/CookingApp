@@ -18,4 +18,6 @@ public interface RecipeRepository extends JpaRepository<Recipe, Long> {
 
     List<Recipe> findByCategory(Category category);
 
+    void deleteRecipeById(Long id);
+
 }

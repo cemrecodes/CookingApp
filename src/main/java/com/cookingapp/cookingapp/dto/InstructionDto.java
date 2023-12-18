@@ -1,6 +1,7 @@
 package com.cookingapp.cookingapp.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.ArrayList;
 import lombok.Data;
 
 @Data

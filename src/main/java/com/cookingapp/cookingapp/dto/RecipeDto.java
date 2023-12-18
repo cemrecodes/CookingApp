@@ -58,7 +58,7 @@ public class RecipeDto {
         StringBuilder resultBuilder = new StringBuilder();
 
         for (InstructionDto instructionDto: instructionArray) {
-            resultBuilder.append(instructionDto.getInstruction()).append(" ");
+            resultBuilder.append(instructionDto.getInstruction()).append("\n");
         }
 
         return resultBuilder.toString();

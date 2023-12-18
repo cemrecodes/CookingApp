@@ -12,7 +12,6 @@ import com.cookingapp.cookingapp.service.ScrapeService;
 import com.cookingapp.cookingapp.util.Util;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -42,23 +41,33 @@ public class ScrapeServiceImp implements ScrapeService {
 
     private final IngredientService ingredientService;
 
-    private final String ingredientAmountSeperators = "bardağı|adet|kaşığı|gram|paket|kase|diş|litre|yaprak|mililitre|ml.|paket|tutam|demet|avuç";
+    private final String ingredientAmountSeperators = "bardağı|adet|kaşığı|gram|paket|kase|diş|litre|yaprak|mililitre|ml.|paket|tutam|demet|avuç|baş|dal";
 
     @Override
     public RecipeDto scrapeAndCreateNewRecipe(String foodName) {
+        // find endpoint for recipe
         String permaLink = this.searchRecipeUrl(foodName);
+        if(permaLink == null){
+            return null;
+        }
+        // append endpoint to base url and scrape the recipe
         HashMap<String, Object> recipeStr = this.scrapeUrl("https://www.yemek.com", permaLink);
+        // convert recipe hashmap to dto
         RecipeDto recipeDto = this.getRecipe(recipeStr);
+        // convert recipe dto to recipe and save
         Recipe recipe = this.recipeService.save(recipeDto.convertToRecipe());
+        // convert ingredient dto's to ingredient and save
         List<Ingredient> ingredients = recipeDto.getIngredients().stream().map(IngredientDto::toIngredient).toList();
         for(Ingredient ingredient: ingredients){
             ingredient.setRecipe(recipe);
             this.ingredientService.save(ingredient);
         }
+        // add id to recipedto for response
         recipeDto.setId(recipe.getId());
         return recipeDto;
     }
 
+    /* returns endpoint for recipe to be scraped */
     @Override
     public String searchRecipeUrl(String foodName) {
         StringBuilder fullUrl = new StringBuilder("https://zagorapi.yemek.com/search/recipe?query=");
@@ -80,9 +89,11 @@ public class ScrapeServiceImp implements ScrapeService {
             logger.error("Couldn't get response: {}", e.getMessage());
         }
 
+        logger.info("ScrapeServiceImp -> searchRecipeUrl permalink: {}", firstPermalink);
         return firstPermalink;
     }
 
+    /* returns recipe by scraping */
     @Override
     public HashMap<String, Object> scrapeUrl(String url, String permaLink) {
         StringBuilder fullUrl = new StringBuilder(url);
@@ -115,6 +126,7 @@ public class ScrapeServiceImp implements ScrapeService {
         }
     }
 
+    /* returns RecipeDto converted from recipe hashmap */
     @Override
     public RecipeDto getRecipe(HashMap<String, Object> recipeMap) {
         Map<String, Object> mappedScript = Util.convertJsonToMap((String) recipeMap.get("recipe"));
@@ -123,47 +135,34 @@ public class ScrapeServiceImp implements ScrapeService {
         recipeDto.setRecipeName((String) mappedScript.get("name"));
         recipeDto.setImageUrl((String) Util.convertObjectToList(mappedScript.get("image")).get(0));
         recipeDto.setServesFor((String) recipeMap.get("servesFor"));
+        // converts cookTime to x saat, x dakika format
         recipeDto.setCookingTime(mappedScript.get("cookTime") != null ? Util.parseDuration((String) mappedScript.get("cookTime")) : "0 dakika");
+        // converts preptTime to x saat, x dakika format
         recipeDto.setPreparationTime(Util.parseDuration((String) mappedScript.get("prepTime")));
+        // gets total time ( cookTime + prepTime )
         recipeDto.setTotalTime(Util.getTotalTime(mappedScript.get("cookTime") != null ? (String) mappedScript.get("cookTime") : "0M", (String) mappedScript.get("prepTime") ));
 
+        // converts ingredients to IngredientDto array
         List<List<String>> recipeIngredients = (List<List<String>>) mappedScript.get("recipeIngredient");
-        // HashMap<Integer, ArrayList<String>> ingredientsMap = getIngredientsMap(recipeIngredients);
-        // recipeDto.setIngredients(ingredientsMap);
         ArrayList<IngredientDto> ingredientsArray = getIngredientsArray(recipeIngredients);
         recipeDto.setIngredients(ingredientsArray);
 
+        // finds cooking - prep times for timer and converts instructions to InstructionDto array
         List<List<String>> recipeInstructions = (List<List<String>>) mappedScript.get("recipeInstructions");
-        // HashMap<Integer, String> instructionsMap = getInstructionsMap(recipeInstructions);
-        // recipeDto.setInstructions(instructionsMap);
         ArrayList<InstructionDto> instructionDtos = getInstructionsArray(recipeInstructions);
         recipeDto.setInstructions(instructionDtos);
 
+        // get difficulty and category of the recipe
         Map<String, Object> difficultyAndCategory = this.getDifficultyAndCategory(recipeDto);
-
         recipeDto.setDifficultyLevel((String) difficultyAndCategory.get("difficulty"));
         recipeDto.setCategory((String) difficultyAndCategory.get("category"));
-
-        /*
-        Map<String, Object> difficultyAndTerms = this.getDifficultyAndTerms(foodRecipeDto);
-
-        foodRecipeDto.setDifficultyLevel(String.valueOf(difficultyAndTerms.get("difficulty")));
-
-         */
-//        if( Util.convertObjectToList(difficultyAndTerms.get("terms")).size() != 0 ){
-        /*
-            Map<String, Object> termList = (Map<String, Object>) difficultyAndTerms.get("terms");
-            HashMap<Integer, ArrayList<String>> terms = this.getTermsMap(termList);
-            foodRecipeDto.setTerms(terms);
-
-         */
-  //      }
 
         return recipeDto;
     }
 
     private ArrayList<IngredientDto> getIngredientsArray(List<List<String>> recipeIngredients){
         ArrayList<IngredientDto> ingredientsArray = new ArrayList<>();
+
         for (List<String> ingredientList : recipeIngredients) {
             for (String ingredient : ingredientList) {
                 IngredientDto ingredientDto = new IngredientDto();
@@ -179,77 +178,24 @@ public class ScrapeServiceImp implements ScrapeService {
         }
         return ingredientsArray;
     }
-    private HashMap<Integer, ArrayList<String>> getIngredientsMap(List<List<String>> recipeIngredients) {
-        HashMap<Integer, ArrayList<String>> ingredientsMap = new HashMap<>();
-        int ingredientIndex = 0;
-        for (List<String> ingredientList : recipeIngredients) {
-            for (String ingredient : ingredientList) {
-                ArrayList<String> ingredients = new ArrayList<>();
-                Pattern pattern = Pattern.compile("(.*?\\s(?:" + ingredientAmountSeperators + "))\\s*(.*)");
-                Matcher matcher = pattern.matcher(ingredient);
-
-                if (matcher.find()) {
-                    ingredients.add(Util.removeExtraSpaces(matcher.group(1)));
-                    ingredients.add(Util.removeExtraSpaces(matcher.group(2)));
-                }
-                ingredientsMap.put(ingredientIndex, ingredients);
-                ingredientIndex++;
-            }
-        }
-        return ingredientsMap;
-    }
-
-    /*
-    private HashMap<Integer, String> getInstructionsMap(List<List<String>> recipeInstructions) {
-        HashMap<Integer, String> instructionMap = new HashMap<>();
-        int instructionIndex = 0;
-        for (List<String> instructionList : recipeInstructions) {
-            for (String instruction : instructionList) {
-                Pattern pattern = Pattern.compile("(.*?[.!?])");
-                Matcher matcher = pattern.matcher(instruction);
-
-                while (matcher.find()) {
-                    String instructionToBeAdded = Util.removeTags(matcher.group(1));
-                    // instructionMap.put(instructionIndex, Util.removeExtraSpaces(matcher.group(1)));
-                    instructionMap.put(instructionIndex, instructionToBeAdded);
-                }
-                instructionIndex += 1;
-            }
-        }
-        return instructionMap;
-    }
-
-     */
 
     private ArrayList<InstructionDto> getInstructionsArray(List<List<String>> recipeInstructions) {
         ArrayList<InstructionDto> instructionsArray = new ArrayList<>();
 
+        // actually one instructionList is returned and it has ArrayList<String>
+        // which means first for loop is looped just once
         for (List<String> instructionList : recipeInstructions) {
-            for (String instruction : instructionList) {
-                Pattern pattern = Pattern.compile("(.*?[.!?])");
-                Matcher matcher = pattern.matcher(instruction);
-                InstructionDto lastInstruction = new InstructionDto();
-                while (matcher.find()) {
-                    Pattern paranthesisPattern = Pattern.compile("\\(([^)]+)\\)");
-                    Matcher paranthesisMatcher = paranthesisPattern.matcher(matcher.group(1));
-                    if(paranthesisMatcher.matches()){
-                        lastInstruction.setInstruction(lastInstruction.getInstruction() + paranthesisMatcher.group(1));
-                        instructionsArray.remove(lastInstruction);
-                        instructionsArray.add(lastInstruction);
-                    }
-                    else{
-                    InstructionDto instructionDto = new InstructionDto();
-                    String instructionToBeAdded = Util.removeTags(matcher.group(1));
-                    instructionDto.setInstruction(instructionToBeAdded);
-                    instructionDto.setTime(Util.findPrepOrCookTime(instructionToBeAdded));
-                    lastInstruction = instructionDto;
-                    instructionsArray.add(instructionDto);
-                    }
-                }
+            for(String instruction: instructionList) {
+                InstructionDto instructionDto = new InstructionDto();
+                instructionDto.setInstruction(Util.removeTags(instruction));
+                // finding times for timer on frontend side
+                instructionDto.setTime(Util.findPrepOrCookTime(instruction));
+                instructionsArray.add(instructionDto);
             }
         }
         return instructionsArray;
     }
+
 
     private Map<String, Object> getDifficultyAndTerms(RecipeDto recipe) {
         String chatGptResponse = this.chatGptService.getDifficultyLevelAndTerms(recipe);
@@ -257,6 +203,7 @@ public class ScrapeServiceImp implements ScrapeService {
         return mappedChatGptResponse;
     }
 
+    /* gets difficulty and category of recipe from chatgpt */
     private Map<String, Object> getDifficultyAndCategory(RecipeDto recipe) {
         String chatGptResponse = this.chatGptService.getDifficultyLevelAndCategory(recipe);
         return Util.convertJsonToMap(chatGptResponse);

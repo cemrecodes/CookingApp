@@ -16,6 +16,8 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.criteria.CriteriaBuilder.In;
+import java.lang.reflect.Array;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -93,71 +95,22 @@ public class Recipe {
         recipeDto.setServesFor(servesFor);
         recipeDto.setDifficultyLevel(DifficultyLevel.toString(difficultyLevel));
         recipeDto.setCategory(Category.toString(category));
-        recipeDto.setIngredients(this.convertIngredients());
+        List<IngredientDto> ingredientDtos = ingredients.stream()
+            .map(Ingredient::toDto)
+            .collect(Collectors.toList());
+        recipeDto.setIngredients(new ArrayList<>(ingredientDtos));
         recipeDto.setInstructions(this.convertInstructions());
         recipeDto.setScore(score);
         return recipeDto;
     }
 
-    private ArrayList<IngredientDto> convertIngredients(){
-        ArrayList<IngredientDto> ingredientList = new ArrayList<>();
-
-        for (Ingredient ingredient: ingredients) {
-            IngredientDto ingredientDto = new IngredientDto();
-            ingredientDto.setIngredient(ingredient.getIngredient());
-            ingredientDto.setAmount(ingredient.getAmount());
-            ingredientList.add(ingredientDto);
-        }
-
-        return ingredientList;
-    }
-    /*
-    private HashMap<Integer, ArrayList<String>> convertIngredients(){
-        HashMap<Integer, ArrayList<String>> ingredientsMap = new HashMap<>();
-
-        int ingredientIndex = 0;
-        for (Ingredient ingredient: ingredients) {
-            ArrayList<String> ingredients = new ArrayList<>();
-            ingredients.add(ingredient.getIngredient());
-            ingredients.add(ingredient.getAmount());
-            ingredientsMap.put(ingredientIndex, ingredients);
-            ingredientIndex++;
-        }
-
-        return ingredientsMap;
-    }
-
-    /*
-    private HashMap<Integer, ArrayList<String>> convertIngredients(){
-        HashMap<Integer, ArrayList<String>> ingredientsMap = new HashMap<>();
-        String[] splittedByComma = ingredients.split(" ,");
-
-        int ingredientIndex = 0;
-        for (String ingredient : splittedByComma) {
-            ArrayList<String> ingredients = new ArrayList<>();
-            Pattern pattern = Pattern.compile("(.*?\\s(?:bardağı|adet|kaşığı|gram|paket|kase|diş|litre))\\s*(.*)");
-            Matcher matcher = pattern.matcher(ingredient);
-
-            if (matcher.find()) {
-                ingredients.add(Util.removeExtraSpaces(removeComma(matcher.group(1))));
-                ingredients.add(Util.removeExtraSpaces(removeComma(matcher.group(2))));
-            }
-            ingredientsMap.put(ingredientIndex, ingredients);
-            ingredientIndex++;
-        }
-
-        return ingredientsMap;
-    }
-
-     */
     private ArrayList<InstructionDto> convertInstructions(){
         ArrayList<InstructionDto> instructionArray = new ArrayList<>();
-        String[] splittedByDot = instructions.split("\\.");
+        String[] split = instructions.split("\n");
 
-        for (String instruction : splittedByDot) {
+        for (String instruction : split) {
             InstructionDto instructionDto = new InstructionDto();
             if(!instruction.equals(" ")) {
-                instruction = Util.removeTags(instruction);
                 instructionDto.setInstruction(instruction);
                 instructionDto.setTime(Util.findPrepOrCookTime(instruction));
                 instructionArray.add(instructionDto);
@@ -165,17 +118,6 @@ public class Recipe {
         }
 
         return instructionArray;
-    }
-
-    private static String removeComma(String ingredient) {
-        if (ingredient == null || ingredient.isEmpty()) {
-            return ingredient;
-        }
-
-        String htmlTagPattern = ",";
-        Pattern pattern = Pattern.compile(htmlTagPattern);
-        Matcher matcher = pattern.matcher(ingredient);
-        return matcher.replaceAll("");
     }
 
 }

@@ -16,5 +16,6 @@ public interface RecipeService {
 
     List<Recipe> getRecipesByCategory(String category);
 
+    void deleteRecipeById(Long id);
 
 }

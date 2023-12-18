@@ -42,5 +42,9 @@ public class RecipeServiceImp implements RecipeService {
         return this.recipeRepository.findByCategory(Category.convert(category));
     }
 
-
+    @Override
+    @Transactional
+    public void deleteRecipeById(Long id) {
+        this.recipeRepository.deleteRecipeById(id);
+    }
 }

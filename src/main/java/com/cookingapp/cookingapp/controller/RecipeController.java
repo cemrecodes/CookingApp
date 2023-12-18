@@ -7,6 +7,7 @@ import com.cookingapp.cookingapp.service.impl.ScrapeServiceImp;
 import com.cookingapp.cookingapp.util.Util;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -88,6 +89,18 @@ public class RecipeController {
         }
         else{
             return ResponseEntity.noContent().build();
+        }
+    }
+
+    @DeleteMapping(value = "/{id}")
+    public ResponseEntity deleteRecipe(@PathVariable Long id){
+        logger.info("DELETE /v1/recipes/{id} endpoint has been called with @PathVariable = {}" , id);
+        if (this.recipeService.getRecipeById(id) == null){
+            return ResponseEntity.notFound().build();
+        }
+        else{
+            this.recipeService.deleteRecipeById(id);
+            return ResponseEntity.ok().build();
         }
     }
 }

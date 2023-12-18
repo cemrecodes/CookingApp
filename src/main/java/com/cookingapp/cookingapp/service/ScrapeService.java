@@ -12,17 +12,7 @@ public interface ScrapeService {
     String searchRecipeUrl(String foodName);
     HashMap<String, Object> scrapeUrl(String url, String permaLink);
     RecipeDto getRecipe(HashMap<String, Object> recipeMap);
-
-    /*
-    private HashMap<Integer, ArrayList<String>> getIngredientsMap(List<List<String>> recipeIngredients);
-
-    private HashMap<Integer, String> getInstructionsMap(List<List<String>> recipeInstructions);
-    private Map<String, Object> getDifficultyAndTerms(RecipeDto recipe);
-    private String getDifficulty(RecipeDto recipe);
-
-     */
     Map<String, Object> getTerms(RecipeDto recipe);
     HashMap<Integer, ArrayList<String>> getTermsMap(Map<String, Object> terms);
 
-    // private String getTotalTime(String cookingTime, String preparationTime);
 }

@@ -29,27 +29,4 @@ public class IngredientServiceImp implements IngredientService {
         return ingredientRepository.getByRecipeId(id);
     }
 
-
-    @Override
-    public List<Ingredient> processIngredientsHashMap(Map<Integer, ArrayList<String>> data, Recipe recipe) {
-        List<Ingredient> ingredients = new ArrayList<>();
-
-        for (Map.Entry<Integer, ArrayList<String>> entry : data.entrySet()) {
-            ArrayList<String> values = entry.getValue();
-
-            if (values.size() >= 2) {
-                String ingredientName = values.get(0);
-                String amount = values.get(1);
-
-                Ingredient ingredient = new Ingredient();
-                ingredient.setRecipe(recipe);
-                ingredient.setIngredient(ingredientName);
-                ingredient.setAmount(amount);
-
-                ingredients.add(ingredient);
-            }
-        }
-
-        return ingredients;
-    }
 }

@@ -13,5 +13,4 @@ public interface IngredientService {
 
     List<Ingredient> getIngredientsByRecipeId(Long id);
 
-    List<Ingredient> processIngredientsHashMap(Map<Integer, ArrayList<String>> data, Recipe recipe);
 }
