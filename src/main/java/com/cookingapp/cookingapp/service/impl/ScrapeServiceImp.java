@@ -1,5 +1,7 @@
 package com.cookingapp.cookingapp.service.impl;
 
+import com.cookingapp.cookingapp.dto.IngredientDto;
+import com.cookingapp.cookingapp.dto.InstructionDto;
 import com.cookingapp.cookingapp.dto.RecipeDto;
 import com.cookingapp.cookingapp.entity.Ingredient;
 import com.cookingapp.cookingapp.entity.Recipe;
@@ -10,6 +12,7 @@ import com.cookingapp.cookingapp.service.ScrapeService;
 import com.cookingapp.cookingapp.util.Util;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -39,7 +42,7 @@ public class ScrapeServiceImp implements ScrapeService {
 
     private final IngredientService ingredientService;
 
-    private final String ingredientAmountSeperators = "bardağı|adet|kaşığı|gram|paket|kase|diş|litre|yaprak|mililitre|ml.|paket|tutam|demet";
+    private final String ingredientAmountSeperators = "bardağı|adet|kaşığı|gram|paket|kase|diş|litre|yaprak|mililitre|ml.|paket|tutam|demet|avuç";
 
     @Override
     public RecipeDto scrapeAndCreateNewRecipe(String foodName) {
@@ -47,8 +50,9 @@ public class ScrapeServiceImp implements ScrapeService {
         HashMap<String, Object> recipeStr = this.scrapeUrl("https://www.yemek.com", permaLink);
         RecipeDto recipeDto = this.getRecipe(recipeStr);
         Recipe recipe = this.recipeService.save(recipeDto.convertToRecipe());
-        List<Ingredient> ingredients = this.ingredientService.processIngredientsHashMap(recipeDto.getIngredients(), recipe);
+        List<Ingredient> ingredients = recipeDto.getIngredients().stream().map(IngredientDto::toIngredient).toList();
         for(Ingredient ingredient: ingredients){
+            ingredient.setRecipe(recipe);
             this.ingredientService.save(ingredient);
         }
         recipeDto.setId(recipe.getId());
@@ -124,12 +128,16 @@ public class ScrapeServiceImp implements ScrapeService {
         recipeDto.setTotalTime(Util.getTotalTime(mappedScript.get("cookTime") != null ? (String) mappedScript.get("cookTime") : "0M", (String) mappedScript.get("prepTime") ));
 
         List<List<String>> recipeIngredients = (List<List<String>>) mappedScript.get("recipeIngredient");
-        HashMap<Integer, ArrayList<String>> ingredientsMap = getIngredientsMap(recipeIngredients);
-        recipeDto.setIngredients(ingredientsMap);
+        // HashMap<Integer, ArrayList<String>> ingredientsMap = getIngredientsMap(recipeIngredients);
+        // recipeDto.setIngredients(ingredientsMap);
+        ArrayList<IngredientDto> ingredientsArray = getIngredientsArray(recipeIngredients);
+        recipeDto.setIngredients(ingredientsArray);
 
         List<List<String>> recipeInstructions = (List<List<String>>) mappedScript.get("recipeInstructions");
-        HashMap<Integer, String> instructionsMap = getInstructionsMap(recipeInstructions);
-        recipeDto.setInstructions(instructionsMap);
+        // HashMap<Integer, String> instructionsMap = getInstructionsMap(recipeInstructions);
+        // recipeDto.setInstructions(instructionsMap);
+        ArrayList<InstructionDto> instructionDtos = getInstructionsArray(recipeInstructions);
+        recipeDto.setInstructions(instructionDtos);
 
         Map<String, Object> difficultyAndCategory = this.getDifficultyAndCategory(recipeDto);
 
@@ -154,6 +162,23 @@ public class ScrapeServiceImp implements ScrapeService {
         return recipeDto;
     }
 
+    private ArrayList<IngredientDto> getIngredientsArray(List<List<String>> recipeIngredients){
+        ArrayList<IngredientDto> ingredientsArray = new ArrayList<>();
+        for (List<String> ingredientList : recipeIngredients) {
+            for (String ingredient : ingredientList) {
+                IngredientDto ingredientDto = new IngredientDto();
+                Pattern pattern = Pattern.compile("(.*?\\s(?:" + ingredientAmountSeperators + "))\\s*(.*)");
+                Matcher matcher = pattern.matcher(ingredient);
+
+                if (matcher.find()) {
+                    ingredientDto.setAmount(Util.removeExtraSpaces(matcher.group(1)));
+                    ingredientDto.setIngredient(Util.removeExtraSpaces(matcher.group(2)));
+                }
+                ingredientsArray.add(ingredientDto);
+            }
+        }
+        return ingredientsArray;
+    }
     private HashMap<Integer, ArrayList<String>> getIngredientsMap(List<List<String>> recipeIngredients) {
         HashMap<Integer, ArrayList<String>> ingredientsMap = new HashMap<>();
         int ingredientIndex = 0;
@@ -174,6 +199,7 @@ public class ScrapeServiceImp implements ScrapeService {
         return ingredientsMap;
     }
 
+    /*
     private HashMap<Integer, String> getInstructionsMap(List<List<String>> recipeInstructions) {
         HashMap<Integer, String> instructionMap = new HashMap<>();
         int instructionIndex = 0;
@@ -191,6 +217,38 @@ public class ScrapeServiceImp implements ScrapeService {
             }
         }
         return instructionMap;
+    }
+
+     */
+
+    private ArrayList<InstructionDto> getInstructionsArray(List<List<String>> recipeInstructions) {
+        ArrayList<InstructionDto> instructionsArray = new ArrayList<>();
+
+        for (List<String> instructionList : recipeInstructions) {
+            for (String instruction : instructionList) {
+                Pattern pattern = Pattern.compile("(.*?[.!?])");
+                Matcher matcher = pattern.matcher(instruction);
+                InstructionDto lastInstruction = new InstructionDto();
+                while (matcher.find()) {
+                    Pattern paranthesisPattern = Pattern.compile("\\(([^)]+)\\)");
+                    Matcher paranthesisMatcher = paranthesisPattern.matcher(matcher.group(1));
+                    if(paranthesisMatcher.matches()){
+                        lastInstruction.setInstruction(lastInstruction.getInstruction() + paranthesisMatcher.group(1));
+                        instructionsArray.remove(lastInstruction);
+                        instructionsArray.add(lastInstruction);
+                    }
+                    else{
+                    InstructionDto instructionDto = new InstructionDto();
+                    String instructionToBeAdded = Util.removeTags(matcher.group(1));
+                    instructionDto.setInstruction(instructionToBeAdded);
+                    instructionDto.setTime(Util.findPrepOrCookTime(instructionToBeAdded));
+                    lastInstruction = instructionDto;
+                    instructionsArray.add(instructionDto);
+                    }
+                }
+            }
+        }
+        return instructionsArray;
     }
 
     private Map<String, Object> getDifficultyAndTerms(RecipeDto recipe) {

@@ -208,4 +208,22 @@ public class Util {
         return matcher.replaceAll("");
     }
 
+    public static String findPrepOrCookTime(String instruction) {
+        String regex = "(\\d+)\\s+(dakika|saat)";
+
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(instruction);
+
+        if (matcher.find()) {
+            String timeStr = matcher.group(1);
+            if(matcher.group(2).equals("saat")){
+                return (Integer.parseInt(matcher.group(1)) * 60) + " dakika";
+            }
+            else
+                return Integer.parseInt(timeStr) + " dakika";
+        } else {
+            return null;
+        }
+    }
+
 }

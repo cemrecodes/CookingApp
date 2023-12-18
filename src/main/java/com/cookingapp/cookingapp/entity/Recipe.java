@@ -1,4 +1,6 @@
 package com.cookingapp.cookingapp.entity;
+import com.cookingapp.cookingapp.dto.IngredientDto;
+import com.cookingapp.cookingapp.dto.InstructionDto;
 import com.cookingapp.cookingapp.dto.RecipeDto;
 import com.cookingapp.cookingapp.util.Util;
 import jakarta.persistence.CascadeType;
@@ -13,6 +15,7 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.criteria.CriteriaBuilder.In;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -96,6 +99,19 @@ public class Recipe {
         return recipeDto;
     }
 
+    private ArrayList<IngredientDto> convertIngredients(){
+        ArrayList<IngredientDto> ingredientList = new ArrayList<>();
+
+        for (Ingredient ingredient: ingredients) {
+            IngredientDto ingredientDto = new IngredientDto();
+            ingredientDto.setIngredient(ingredient.getIngredient());
+            ingredientDto.setAmount(ingredient.getAmount());
+            ingredientList.add(ingredientDto);
+        }
+
+        return ingredientList;
+    }
+    /*
     private HashMap<Integer, ArrayList<String>> convertIngredients(){
         HashMap<Integer, ArrayList<String>> ingredientsMap = new HashMap<>();
 
@@ -134,20 +150,21 @@ public class Recipe {
     }
 
      */
-    private HashMap<Integer, String> convertInstructions(){
-        HashMap<Integer, String> instructionMap = new HashMap<>();
+    private ArrayList<InstructionDto> convertInstructions(){
+        ArrayList<InstructionDto> instructionArray = new ArrayList<>();
         String[] splittedByDot = instructions.split("\\.");
 
-        int instructionIndex = 0;
         for (String instruction : splittedByDot) {
+            InstructionDto instructionDto = new InstructionDto();
             if(!instruction.equals(" ")) {
                 instruction = Util.removeTags(instruction);
-                instructionMap.put(instructionIndex, Util.removeExtraSpaces(instruction));
-                instructionIndex += 1;
+                instructionDto.setInstruction(instruction);
+                instructionDto.setTime(Util.findPrepOrCookTime(instruction));
+                instructionArray.add(instructionDto);
             }
-
         }
-        return instructionMap;
+
+        return instructionArray;
     }
 
     private static String removeComma(String ingredient) {

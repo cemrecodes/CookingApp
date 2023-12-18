@@ -1,5 +1,6 @@
 package com.cookingapp.cookingapp.service.impl;
 
+import com.cookingapp.cookingapp.dto.IngredientDto;
 import com.cookingapp.cookingapp.entity.Ingredient;
 import com.cookingapp.cookingapp.entity.Recipe;
 import com.cookingapp.cookingapp.repo.IngredientRepository;
@@ -27,6 +28,7 @@ public class IngredientServiceImp implements IngredientService {
     public List<Ingredient> getIngredientsByRecipeId(Long id) {
         return ingredientRepository.getByRecipeId(id);
     }
+
 
     @Override
     public List<Ingredient> processIngredientsHashMap(Map<Integer, ArrayList<String>> data, Recipe recipe) {

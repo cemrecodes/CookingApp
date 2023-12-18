@@ -23,16 +23,16 @@ public class RecipeDto {
     private String servesFor;
     private String difficultyLevel;
     private String category;
-    private HashMap<Integer, ArrayList<String>> ingredients;
-    private HashMap<Integer, String> instructions;
+    private ArrayList<IngredientDto> ingredients;
+    private ArrayList<InstructionDto> instructions;
     private OffsetDateTime createTime;
     private HashMap<Integer, ArrayList<String>> terms;
     private int score;
 
     public String toStringForChatGpt(){
         StringBuilder specialStringBuilder = new StringBuilder();
-        for (Map.Entry<Integer, String> entry : instructions.entrySet()) {
-            specialStringBuilder.append(entry.getValue()).append(". ");
+        for (InstructionDto instructionDto : instructions) {
+            specialStringBuilder.append(instructionDto.getInstruction()).append(". ");
         }
 
         return recipeName + " Pişirme Süresi: " + cookingTime + " Hazırlama Süresi: " + preparationTime +
@@ -54,28 +54,11 @@ public class RecipeDto {
         return recipe;
     }
 
-    private String createIngredientsString(HashMap<Integer, ArrayList<String>> ingredients) {
+    private String createInstructionsString(ArrayList<InstructionDto> instructionArray){
         StringBuilder resultBuilder = new StringBuilder();
 
-        for (ArrayList<String> ingredientList : ingredients.values()) {
-            for (String ingredient : ingredientList) {
-                resultBuilder.append(ingredient).append(" ");
-            }
-            resultBuilder.append(",");
-        }
-
-        if (!resultBuilder.isEmpty()) {
-            resultBuilder.setLength(resultBuilder.length() - 1);
-        }
-
-        return resultBuilder.toString();
-    }
-
-    private String createInstructionsString(HashMap<Integer, String> methodList) {
-        StringBuilder resultBuilder = new StringBuilder();
-
-        for (String method : methodList.values()) {
-            resultBuilder.append(method).append(" ");
+        for (InstructionDto instructionDto: instructionArray) {
+            resultBuilder.append(instructionDto.getInstruction()).append(" ");
         }
 
         return resultBuilder.toString();
