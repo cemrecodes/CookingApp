@@ -103,4 +103,16 @@ public class RecipeController {
             return ResponseEntity.ok().build();
         }
     }
+
+    @GetMapping(value = "/recipe-of-the-day")
+    public ResponseEntity getRecipeOfTheDay(){
+        logger.info("getRecipeOfTheDay has been called");
+        if(this.recipeService.getDailyRandomRecipe() != null){
+            return ResponseEntity.ok(this.recipeService.getDailyRandomRecipe().toDto());
+        }
+        else{
+            this.recipeService.chooseDailyRandomRecipe();
+            return ResponseEntity.ok(this.recipeService.getDailyRandomRecipe().toDto());
+        }
+    }
 }

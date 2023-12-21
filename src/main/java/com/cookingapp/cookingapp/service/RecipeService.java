@@ -18,4 +18,7 @@ public interface RecipeService {
 
     void deleteRecipeById(Long id);
 
+    void chooseDailyRandomRecipe();
+    Recipe getDailyRandomRecipe();
+
 }

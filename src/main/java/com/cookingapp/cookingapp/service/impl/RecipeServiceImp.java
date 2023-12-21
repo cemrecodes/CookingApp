@@ -4,7 +4,7 @@ import com.cookingapp.cookingapp.entity.Category;
 import com.cookingapp.cookingapp.entity.Recipe;
 import com.cookingapp.cookingapp.repo.RecipeRepository;
 import com.cookingapp.cookingapp.service.RecipeService;
-import com.cookingapp.cookingapp.util.Util;
+import java.util.Random;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +16,7 @@ import java.util.List;
 public class RecipeServiceImp implements RecipeService {
 
     private final RecipeRepository recipeRepository;
+    private Recipe dailyRandomRecipe;
 
     @Override
     public Recipe save(Recipe recipe) {
@@ -46,5 +47,20 @@ public class RecipeServiceImp implements RecipeService {
     @Transactional
     public void deleteRecipeById(Long id) {
         this.recipeRepository.deleteRecipeById(id);
+    }
+
+    @Override
+    public void chooseDailyRandomRecipe() {
+        List<Recipe> recipeList = this.getAllRecipe();
+        if(!recipeList.isEmpty()){
+            Random random = new Random();
+            int randomIndex = random.nextInt(recipeList.size());
+            dailyRandomRecipe = recipeList.get(randomIndex);
+        }
+    }
+
+    @Override
+    public Recipe getDailyRandomRecipe() {
+        return dailyRandomRecipe;
     }
 }
