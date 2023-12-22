@@ -5,6 +5,9 @@ import com.cookingapp.cookingapp.entity.Member;
 import com.cookingapp.cookingapp.repo.MemberRepository;
 import com.cookingapp.cookingapp.service.MemberService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,10 +16,11 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class MemberServiceImp implements MemberService {
+public class MemberServiceImp implements MemberService, UserDetailsService {
 
     private final MemberRepository memberRepository;
 
+    private final static String USER_NOT_FOUND_MESSAGE = "Member (user) with email %s not found";
     /*
     @Override
     @Transactional
@@ -61,5 +65,9 @@ public class MemberServiceImp implements MemberService {
     }
 
 
-
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        return memberRepository.findByEmail(email)
+            .orElseThrow(() -> new UsernameNotFoundException(String.format(USER_NOT_FOUND_MESSAGE)));
+    }
 }

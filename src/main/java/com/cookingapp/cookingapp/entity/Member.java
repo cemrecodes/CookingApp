@@ -6,15 +6,18 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.util.Collection;
+import java.util.Collections;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
-import java.io.Serializable;
 
 @Entity
 @Table(name = "member")
@@ -24,7 +27,7 @@ import java.io.Serializable;
 @Setter
 @EqualsAndHashCode(of = {"id"})
 @ToString
-public class Member implements Serializable {
+public class Member implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,7 +40,47 @@ public class Member implements Serializable {
     private String password;
 
     @Enumerated
+    private MemberRole memberRole;
+
+    @Enumerated
     private LoginType socialTypeLogin;
+
+    private Boolean locked;
+    private Boolean enabled;
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        SimpleGrantedAuthority authority = new SimpleGrantedAuthority(memberRole.name());
+        return Collections.singletonList(authority);
+    }
+
+
+    // kullanılmıyor
+    @Override
+    public String getUsername() {
+        return null;
+    }
+
+    // kullanılmıyor
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return !locked;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return enabled;
+    }
 
     public enum LoginType {
         GOOGLE,
