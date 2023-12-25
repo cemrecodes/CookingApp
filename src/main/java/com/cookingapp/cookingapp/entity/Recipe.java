@@ -97,7 +97,7 @@ public class Recipe {
         recipeDto.setCategory(Category.toString(category));
         List<IngredientDto> ingredientDtos = ingredients.stream()
             .map(Ingredient::toDto)
-            .collect(Collectors.toList());
+            .toList();
         recipeDto.setIngredients(new ArrayList<>(ingredientDtos));
         recipeDto.setInstructions(this.convertInstructions());
         recipeDto.setScore(score);
