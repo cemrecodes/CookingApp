@@ -1,9 +1,9 @@
 package com.cookingapp.cookingapp.service.impl;
 
-import com.cookingapp.cookingapp.dto.MemberDto;
 import com.cookingapp.cookingapp.entity.Member;
 import com.cookingapp.cookingapp.repo.MemberRepository;
 import com.cookingapp.cookingapp.service.MemberService;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -11,7 +11,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -64,10 +63,19 @@ public class MemberServiceImp implements MemberService, UserDetailsService {
         return memberRepository.findAll();
     }
 
+    @Override
+    public Optional<Member>getMemberByEmail(String email) {
+        return memberRepository.findByEmail(email);
+    }
+
+    @Override
+    public Optional<Member> getMemberById(Long memberId) {
+        return memberRepository.findById(memberId);
+    }
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        return memberRepository.findByEmail(email)
-            .orElseThrow(() -> new UsernameNotFoundException(String.format(USER_NOT_FOUND_MESSAGE)));
+        return memberRepository.findByEmail(email).orElse(null);
+          //  .orElseThrow(() -> new UsernameNotFoundException(String.format(USER_NOT_FOUND_MESSAGE, email)));
     }
 }

@@ -20,15 +20,21 @@ public class GoogleService {
   @Value("${spring.auth.google.client-id}")
   private String CLIENT_ID;
 
-  public GoogleIdToken verifyIdToken(String idTokenString)
-      throws IOException, GeneralSecurityException {
+  public Boolean verifyToken(String token) {
+      return verifyIdToken(token) != null;
+  }
+  public GoogleIdToken verifyIdToken(String idTokenString) {
     GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
         new NetHttpTransport(), GsonFactory.getDefaultInstance()
     )
         .setAudience(Collections.singletonList(CLIENT_ID))
         .build();
 
-    return verifier.verify(idTokenString);
+    try {
+      return verifier.verify(idTokenString);
+    } catch (GeneralSecurityException | IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public MemberDto getGoogleAuthMemberInfo(GoogleIdToken googleIdToken){
@@ -51,46 +57,16 @@ public class GoogleService {
     memberDto.setName((String) payload.get("given_name"));
     memberDto.setSurname((String) payload.get("family_name"));
     memberDto.setEmail(payload.getEmail());
-    memberDto.setSocialLoginId(Long.valueOf(payload.getSubject()));
+   // memberDto.setSocialLoginId(Long.parseLong(payload.getSubject()));
     memberDto.setProfilePicUrl((String) payload.get("picture"));
     memberDto.setSocialTypeLogin(String.valueOf(LoginType.GOOGLE));
+    memberDto.setRole("USER");
 
     return memberDto;
   }
 
-  /*
-  GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(transport, jsonFactory)
-      // Specify the CLIENT_ID of the app that accesses the backend:
-      .setAudience(Collections.singletonList(CLIENT_ID))
-      // Or, if multiple clients access the backend:
-      //.setAudience(Arrays.asList(CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3))
-      .build();
-
-// (Receive idTokenString by HTTPS POST)
-
-  GoogleIdToken idToken = verifier.verify(idTokenString);
-if (idToken != null) {
-    Payload payload = idToken.getPayload();
-
-    // Print user identifier
-    String userId = payload.getSubject();
-    System.out.println("User ID: " + userId);
-
-    // Get profile information from payload
-    String email = payload.getEmail();
-    boolean emailVerified = Boolean.valueOf(payload.getEmailVerified());
-    String name = (String) payload.get("name");
-    String pictureUrl = (String) payload.get("picture");
-    String locale = (String) payload.get("locale");
-    String familyName = (String) payload.get("family_name");
-    String givenName = (String) payload.get("given_name");
-
-    // Use or store profile information
-    // ...
-
-  } else {
-    System.out.println("Invalid ID token.");
+  public String getEmail(GoogleIdToken googleIdToken){
+    return googleIdToken.getPayload().getEmail();
   }
 
-   */
 }

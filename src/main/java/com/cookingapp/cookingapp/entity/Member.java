@@ -58,7 +58,7 @@ public class Member implements UserDetails {
     // kullanılmıyor
     @Override
     public String getUsername() {
-        return null;
+        return email;
     }
 
     // kullanılmıyor
