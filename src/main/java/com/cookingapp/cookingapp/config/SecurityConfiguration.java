@@ -25,6 +25,7 @@ public class SecurityConfiguration {
         .csrf(AbstractHttpConfigurer::disable)
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/v1/recipes/{recipeId}/like").authenticated()
+            .requestMatchers("/v1/members").authenticated()
             .anyRequest().permitAll()
         )
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

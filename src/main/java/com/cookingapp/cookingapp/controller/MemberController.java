@@ -10,9 +10,12 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Map;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -60,13 +63,34 @@ public class MemberController {
                 return ResponseEntity.ok(Map.of("token", jwtService.generateToken(member)));
             }
         }
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal server error");
+        else{
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
     }
 
 
+    @GetMapping
+    public ResponseEntity getMember(){
+        logger.info("getMember has been called");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            String email = userDetails.getUsername();
+            Optional<Member> member = memberService.getMemberByEmail(email);
+            if (member.isPresent()) {
+                logger.info("Response: {}", member.get().toDto());
+                return ResponseEntity.ok(member.get().toDto());
+            }
+        }
 
+        return ResponseEntity.notFound().build();
+    }
+
+    /*
     @GetMapping
     public ResponseEntity<List<Member>> getAll(){
         return ResponseEntity.ok(memberService.getAllMembers());
     }
+
+     */
 }

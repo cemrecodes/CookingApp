@@ -10,6 +10,7 @@ import com.cookingapp.cookingapp.service.impl.ScrapeServiceImp;
 import com.cookingapp.cookingapp.util.Util;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -137,6 +138,11 @@ public class RecipeController {
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             String email = userDetails.getUsername();
             Optional<Member> member = memberService.getMemberByEmail(email);
+            if(member.isPresent()){
+                if(likeService.findLikeByRecipeAndMember(recipeId,member.get()) != null){
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Recipe has already been liked.");
+                }
+            }
             member.ifPresent(value -> likeService.save(recipeId, value));
         }
         return ResponseEntity.ok().build();

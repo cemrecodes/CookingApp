@@ -11,4 +11,6 @@ public interface LikeService {
   void delete(Long recipeId, Member member);
 
   Like findLikeByRecipeAndMember(Recipe recipe, Member member);
+
+  Like findLikeByRecipeAndMember(Long recipeId, Member member);
 }

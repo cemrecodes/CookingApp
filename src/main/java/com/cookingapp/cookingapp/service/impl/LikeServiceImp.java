@@ -39,4 +39,10 @@ public class LikeServiceImp implements LikeService {
         return likeRepository.findByRecipeAndMember(recipe, member);
     }
 
+    @Override
+    public Like findLikeByRecipeAndMember(Long recipeId, Member member) {
+        Recipe recipe = recipeService.getRecipeById(recipeId);
+        return likeRepository.findByRecipeAndMember(recipe, member);
+    }
+
 }

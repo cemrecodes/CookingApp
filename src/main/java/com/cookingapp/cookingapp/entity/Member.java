@@ -1,5 +1,6 @@
 package com.cookingapp.cookingapp.entity;
 
+import com.cookingapp.cookingapp.dto.MemberDto;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
@@ -91,6 +92,16 @@ public class Member implements UserDetails {
     public void setPassword(String password) {
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         this.password = passwordEncoder.encode(password);
+    }
+
+    public MemberDto toDto(){
+        MemberDto memberDto = new MemberDto();
+        memberDto.setId(id);
+        memberDto.setName(name);
+        memberDto.setSurname(surname);
+        memberDto.setProfilePicUrl(profilePicUrl);
+        memberDto.setEmail(email);
+        return memberDto;
     }
 
 
