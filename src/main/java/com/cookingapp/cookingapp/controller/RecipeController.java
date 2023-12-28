@@ -6,6 +6,7 @@ import com.cookingapp.cookingapp.entity.Recipe;
 import com.cookingapp.cookingapp.service.LikeService;
 import com.cookingapp.cookingapp.service.MemberService;
 import com.cookingapp.cookingapp.service.RecipeService;
+import com.cookingapp.cookingapp.service.SavedRecipeService;
 import com.cookingapp.cookingapp.service.impl.ScrapeServiceImp;
 import com.cookingapp.cookingapp.util.Util;
 import java.util.Optional;
@@ -38,6 +39,8 @@ public class RecipeController {
     private final MemberService memberService;
 
     private final LikeService likeService;
+
+    private final SavedRecipeService savedRecipeService;
 
     @GetMapping(value = "/search")
     public ResponseEntity scrapeAndCreateNewFoodRecipe(@RequestParam(required = true) String foodName){
@@ -161,6 +164,56 @@ public class RecipeController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/{recipeId}/save")
+    public ResponseEntity saveRecipe(@PathVariable Long recipeId) {
+        logger.info("POST [SAVE] /v1/recipes/{recipeId}/save endpoint has been called with @PathVariable = {}" , recipeId);
+        //String email = SecurityContextHolder.getContext().getAuthentication().getPrincipal() ??
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            String email = userDetails.getUsername();
+            Optional<Member> member = memberService.getMemberByEmail(email);
+            if(member.isPresent()){
+                if(savedRecipeService.findSaveByRecipeAndMember(recipeId, member.get()) != null){
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Recipe has already been saved.");
+                }
+            }
+            member.ifPresent(value -> savedRecipeService.save(recipeId, value));
+        }
+        return ResponseEntity.ok().build();
+    }
+    @DeleteMapping("/{recipeId}/save")
+    public ResponseEntity unsaveRecipe(@PathVariable Long recipeId) {
+        logger.info("DELETE [SAVE] /v1/recipes/{recipeId}/save endpoint has been called with @PathVariable = {}" , recipeId);
+        //String email = SecurityContextHolder.getContext().getAuthentication().getPrincipal() ??
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            String email = userDetails.getUsername();
+            Optional<Member> member = memberService.getMemberByEmail(email);
+            member.ifPresent(value -> savedRecipeService.delete(recipeId, value));
+        }
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping(value = "/saved")
+    public ResponseEntity getSavedRecipes(){
+        logger.info("getSavedRecipes has been called");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            String email = userDetails.getUsername();
+            Optional<Member> member = memberService.getMemberByEmail(email);
+            if( member.isPresent() ){
+                List<RecipeDto> savedRecipes = savedRecipeService.getSavedRecipesByMember(member.get())
+                    .stream()
+                    .map(Recipe::toDto)
+                    .toList();
+                return ResponseEntity.ok(savedRecipes);
+            }
+        }
+        return ResponseEntity.notFound().build();
+    }
 
 
 }
