@@ -32,7 +32,7 @@ public class LikeServiceImp implements LikeService {
     public void delete(Long recipeId, Member member) {
         Recipe recipe = recipeService.getRecipeById(recipeId);
         Like like = findLikeByRecipeAndMember(recipe, member);
-        likeRepository.deleteLikeById(like);
+        likeRepository.delete(like);
     }
 
     @Override
