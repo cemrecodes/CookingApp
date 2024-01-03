@@ -10,6 +10,6 @@ public interface IngredientService {
 
     List<Ingredient> getIngredientsByRecipeId(Long id);
 
-    void saveAll(List<Ingredient> ingredientList);
+    List<Ingredient> saveAll(List<Ingredient> ingredientList);
 
 }

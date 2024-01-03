@@ -25,8 +25,9 @@ public class IngredientServiceImp implements IngredientService {
     }
 
     @Override
-    public void saveAll(List<Ingredient> ingredientList) {
+    public List<Ingredient> saveAll(List<Ingredient> ingredientList) {
         ingredientRepository.saveAll(ingredientList);
+      return ingredientList;
     }
 
 }
