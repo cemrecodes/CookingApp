@@ -2,9 +2,12 @@ package com.cookingapp.cookingapp.controller;
 
 import com.cookingapp.cookingapp.config.JwtService;
 import com.cookingapp.cookingapp.dto.MemberDto;
+import com.cookingapp.cookingapp.dto.RecipeDto;
 import com.cookingapp.cookingapp.entity.Member;
+import com.cookingapp.cookingapp.entity.Recipe;
 import com.cookingapp.cookingapp.service.GoogleService;
 import com.cookingapp.cookingapp.service.MemberService;
+import com.cookingapp.cookingapp.service.RecipeMemberService;
 import com.cookingapp.cookingapp.service.impl.MemberServiceImp;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import java.io.IOException;
@@ -36,6 +39,8 @@ public class MemberController {
     private final MemberService memberService;
 
     private final MemberServiceImp memberServiceImp;
+
+    private final RecipeMemberService recipeMemberService;
 
     private final GoogleService googleService;
 
@@ -93,4 +98,11 @@ public class MemberController {
     }
 
      */
+
+    @GetMapping("/{memberId}/recipes")
+    public ResponseEntity<List<RecipeDto>> getRecipesByMember(@PathVariable Long memberId){
+        List<RecipeDto> recipeDtoList = recipeMemberService.getRecipesByMemberId(memberId).stream().map(Recipe::toDto).toList();
+        return ResponseEntity.ok(recipeDtoList);
+    }
+
 }

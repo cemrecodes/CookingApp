@@ -269,14 +269,14 @@ public class RecipeController {
             String email = userDetails.getUsername();
             Optional<Member> member = memberService.getMemberByEmail(email);
             if( member.isPresent() ){
-                // todo işlem yap
+                List<Ingredient> ingredientList = recipeDto.getIngredients().stream()
+                    .map(IngredientDto::toIngredient)
+                    .toList();
+                Recipe recipe = recipeServiceFacade.saveRecipe(recipeDto.convertToRecipe(), ingredientList, member.get());
+                return ResponseEntity.ok(recipe.toDto());
             }
         }
-        List<Ingredient> ingredientList = recipeDto.getIngredients().stream()
-            .map(IngredientDto::toIngredient)
-            .toList();
-        Recipe recipe = recipeServiceFacade.saveRecipe(recipeDto.convertToRecipe(), ingredientList);
-        return ResponseEntity.ok(recipe.toDto());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
 }
