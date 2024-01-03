@@ -24,8 +24,13 @@ public class SecurityConfiguration {
     http
         .csrf(AbstractHttpConfigurer::disable)
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/v1/recipes/{recipeId}/like").authenticated()
-            .requestMatchers("/v1/members").authenticated()
+            .requestMatchers(
+                "/v1/members",
+                "/v1/recipes/{recipeId}/like",
+                "/v1/recipes/{recipeId}/save",
+                "/v1/recipes/saved"
+            )
+            .authenticated()
             .anyRequest().permitAll()
         )
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
