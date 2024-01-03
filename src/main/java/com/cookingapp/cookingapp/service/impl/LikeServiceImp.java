@@ -7,6 +7,7 @@ import com.cookingapp.cookingapp.entity.Recipe;
 import com.cookingapp.cookingapp.repo.LikeRepository;
 import com.cookingapp.cookingapp.service.LikeService;
 import com.cookingapp.cookingapp.service.RecipeService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -43,6 +44,11 @@ public class LikeServiceImp implements LikeService {
     public Like findLikeByRecipeAndMember(Long recipeId, Member member) {
         Recipe recipe = recipeService.getRecipeById(recipeId);
         return likeRepository.findByRecipeAndMember(recipe, member);
+    }
+
+    @Override
+    public List<Recipe> getLikedRecipesByMember(Member member) {
+        return likeRepository.getLikedRecipesByMember(member);
     }
 
 }
