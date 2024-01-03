@@ -27,7 +27,7 @@ public class RecipeDto {
     private ArrayList<InstructionDto> instructions;
     private OffsetDateTime createTime;
     private HashMap<Integer, ArrayList<String>> terms;
-    private int score;
+    private Double score;
 
     public String toStringForChatGpt(){
         StringBuilder specialStringBuilder = new StringBuilder();
@@ -51,6 +51,7 @@ public class RecipeDto {
         // recipe.setIngredients(createIngredientsString(ingredients));
         recipe.setInstructions(createInstructionsString(instructions));
         recipe.setTermsAdded(false);
+        recipe.setScore(score);
         return recipe;
     }
 

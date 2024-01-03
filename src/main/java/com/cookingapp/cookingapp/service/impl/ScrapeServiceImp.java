@@ -7,12 +7,15 @@ import com.cookingapp.cookingapp.entity.Ingredient;
 import com.cookingapp.cookingapp.entity.Recipe;
 import com.cookingapp.cookingapp.service.ChatGptService;
 import com.cookingapp.cookingapp.service.IngredientService;
+import com.cookingapp.cookingapp.service.RecipeESService;
 import com.cookingapp.cookingapp.service.RecipeService;
+import com.cookingapp.cookingapp.service.RecipeServiceFacade;
 import com.cookingapp.cookingapp.service.ScrapeService;
 import com.cookingapp.cookingapp.util.Util;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -31,9 +34,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class ScrapeServiceImp implements ScrapeService {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScrapeServiceImp.class);
 
     private final RecipeService recipeService;
 
@@ -41,10 +44,14 @@ public class ScrapeServiceImp implements ScrapeService {
 
     private final IngredientService ingredientService;
 
+    private final RecipeESService recipeESService;
+
+    private final RecipeServiceFacade recipeServiceFacade;
+
     private final String ingredientAmountSeperators = "bardağı|adet|kaşığı|gram|paket|kase|diş|litre|yaprak|mililitre|ml.|paket|tutam|demet|avuç|baş|dal";
 
     @Override
-    public RecipeDto scrapeAndCreateNewRecipe(String foodName) {
+    public Recipe scrapeAndCreateNewRecipe(String foodName) {
         // find endpoint for recipe
         String permaLink = this.searchRecipeUrl(foodName);
         if(permaLink == null){
@@ -54,17 +61,28 @@ public class ScrapeServiceImp implements ScrapeService {
         HashMap<String, Object> recipeStr = this.scrapeUrl("https://www.yemek.com", permaLink);
         // convert recipe hashmap to dto
         RecipeDto recipeDto = this.getRecipe(recipeStr);
+        if(recipeDto.getScore() == null){
+            recipeDto.setScore(0.0);
+        }
+        /*
         // convert recipe dto to recipe and save
         Recipe recipe = this.recipeService.save(recipeDto.convertToRecipe());
         // convert ingredient dto's to ingredient and save
+        */
         List<Ingredient> ingredients = recipeDto.getIngredients().stream().map(IngredientDto::toIngredient).toList();
+        /*
         for(Ingredient ingredient: ingredients){
             ingredient.setRecipe(recipe);
             this.ingredientService.save(ingredient);
         }
+
+        recipe.setIngredients(ingredients);
+        recipeESService.save(recipe.toRecipeES());
         // add id to recipedto for response
         recipeDto.setId(recipe.getId());
-        return recipeDto;
+         */
+
+        return recipeServiceFacade.saveRecipe(recipeDto.convertToRecipe(), ingredients);
     }
 
     /* returns endpoint for recipe to be scraped */
@@ -86,10 +104,10 @@ public class ScrapeServiceImp implements ScrapeService {
             JsonNode jsonNode = objectMapper.readTree(response.body());
             firstPermalink = jsonNode.path("Data").path("Posts").get(0).path("Permalink").asText();
         } catch (Exception e) {
-            logger.error("Couldn't get response: {}", e.getMessage());
+            log.error("Couldn't get response: {}", e.getMessage());
         }
 
-        logger.info("ScrapeServiceImp -> searchRecipeUrl permalink: {}", firstPermalink);
+        log.info("ScrapeServiceImp -> searchRecipeUrl permalink: {}", firstPermalink);
         return firstPermalink;
     }
 
@@ -121,7 +139,7 @@ public class ScrapeServiceImp implements ScrapeService {
 
             return result;
         } catch (Exception e) {
-            logger.error("Couldn't scrape url: {}", e.getMessage());
+            log.error("Couldn't scrape url: {}", e.getMessage());
             return null;
         }
     }
