@@ -4,8 +4,8 @@ import com.cookingapp.cookingapp.entity.Ingredient;
 import com.cookingapp.cookingapp.entity.Member;
 import com.cookingapp.cookingapp.entity.Recipe;
 import com.cookingapp.cookingapp.service.IngredientService;
-import com.cookingapp.cookingapp.service.MemberService;
 import com.cookingapp.cookingapp.service.RecipeESService;
+import com.cookingapp.cookingapp.service.RecipeMemberService;
 import com.cookingapp.cookingapp.service.RecipeService;
 import com.cookingapp.cookingapp.service.RecipeServiceFacade;
 import java.util.ArrayList;
@@ -23,7 +23,7 @@ public class RecipeServiceFacadeImp implements RecipeServiceFacade {
 
   private final RecipeESService recipeESService;
 
-  private final MemberService memberService;
+  private final RecipeMemberService recipeMemberService;
 
   @Override
   public Recipe saveRecipe(Recipe recipe, List<Ingredient> ingredientList) {
@@ -33,8 +33,7 @@ public class RecipeServiceFacadeImp implements RecipeServiceFacade {
       ingredient.setRecipe(finalRecipe);
       list.add(ingredient);
     }
-    ingredientList = list;
-    ingredientService.saveAll(ingredientList);
+    recipe.setIngredients( ingredientService.saveAll(list) );
     recipeESService.save(recipe.toRecipeES());
     return recipe;
   }
@@ -51,6 +50,7 @@ public class RecipeServiceFacadeImp implements RecipeServiceFacade {
     ingredientList = list;
     ingredientService.saveAll(ingredientList);
     recipeESService.save(recipe.toRecipeES());
+    recipeMemberService.save(recipe, member);
     return recipe;
   }
 
