@@ -1,7 +1,7 @@
 package com.cookingapp.cookingapp.entity;
 
 import com.cookingapp.cookingapp.dto.IngredientDto;
-import jakarta.persistence.CascadeType;
+import com.cookingapp.cookingapp.model.IngredientES;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -9,7 +9,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import java.util.ArrayList;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -45,4 +44,12 @@ public class Ingredient {
             ingredientDto.setAmount(amount);
             return ingredientDto;
     }
+
+  public IngredientES toIngredientES() {
+      IngredientES ingredientES = new IngredientES();
+      ingredientES.setId(id);
+      ingredientES.setIngredient(ingredient);
+      ingredientES.setAmount(amount);
+      return ingredientES;
+  }
 }

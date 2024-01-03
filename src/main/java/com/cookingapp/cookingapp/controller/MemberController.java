@@ -12,6 +12,7 @@ import java.security.GeneralSecurityException;
 import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -28,10 +29,9 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/v1/members")
+@Slf4j
 @RequiredArgsConstructor
 public class MemberController {
-
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MemberController.class);
 
     private final MemberService memberService;
 
@@ -49,7 +49,7 @@ public class MemberController {
     @PostMapping(value = "/login/google")
     public ResponseEntity login(@RequestBody Map<String, String> requestBody){
         String idToken = requestBody.get("idToken");
-        logger.info("Request: {}" , idToken);
+        log.info("Request: {}" , idToken);
         GoogleIdToken googleIdToken = googleService.verifyIdToken(idToken);
         if( googleIdToken != null ){
             // Optional<Member> member = memberService.getMemberByEmail(googleService.getEmail(googleIdToken));
@@ -71,14 +71,14 @@ public class MemberController {
 
     @GetMapping
     public ResponseEntity getMember(){
-        logger.info("getMember has been called");
+        log.info("getMember has been called");
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             String email = userDetails.getUsername();
             Optional<Member> member = memberService.getMemberByEmail(email);
             if (member.isPresent()) {
-                logger.info("Response: {}", member.get().toDto());
+                log.info("Response: {}", member.get().toDto());
                 return ResponseEntity.ok(member.get().toDto());
             }
         }

@@ -2,6 +2,8 @@ package com.cookingapp.cookingapp.entity;
 import com.cookingapp.cookingapp.dto.IngredientDto;
 import com.cookingapp.cookingapp.dto.InstructionDto;
 import com.cookingapp.cookingapp.dto.RecipeDto;
+import com.cookingapp.cookingapp.model.IngredientES;
+import com.cookingapp.cookingapp.model.RecipeES;
 import com.cookingapp.cookingapp.util.Util;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -76,7 +78,7 @@ public class Recipe {
     @Column(columnDefinition = "TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createDate;
 
-    private int score;
+    private Double score;
 
     private boolean termsAdded;
     @PrePersist
@@ -118,6 +120,26 @@ public class Recipe {
         }
 
         return instructionArray;
+    }
+
+    public RecipeES toRecipeES(){
+        RecipeES recipeES = new RecipeES();
+        recipeES.setId(id);
+        recipeES.setImageUrl(imageUrl);
+        recipeES.setRecipeName(recipeName);
+        recipeES.setCookingTime(cookingTime);
+        recipeES.setPreparationTime(preparationTime);
+        recipeES.setServesFor(servesFor);
+        recipeES.setDifficultyLevel(difficultyLevel.toString());
+        recipeES.setCategory(category.toString());
+        List<IngredientES> ingredientESList = new ArrayList<>();
+        for(Ingredient ingredient: ingredients){
+            ingredientESList.add(ingredient.toIngredientES());
+        }
+        recipeES.setIngredients(ingredientESList);
+        recipeES.setScore(score);
+        recipeES.setTermsAdded(termsAdded);
+        return recipeES;
     }
 
 }
