@@ -4,6 +4,7 @@ import com.cookingapp.cookingapp.dto.ChatGptRequest;
 import com.cookingapp.cookingapp.dto.ChatGptResponse;
 import com.cookingapp.cookingapp.dto.Message;
 import com.cookingapp.cookingapp.dto.RecipeDto;
+import com.cookingapp.cookingapp.entity.RecipeDraft;
 import com.cookingapp.cookingapp.service.ChatGptService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -115,6 +116,20 @@ public class ChatGptServiceImp implements ChatGptService {
         messages.add(exampleUserMessage);
         messages.add(exampleAssistantMessage);
         messages.add(new Message("user", recipe.toStringForChatGpt()) );
+        ChatGptRequest request = new ChatGptRequest(model, messages);
+        ChatGptResponse chatGptResponse = template.postForObject(apiUrl, request, ChatGptResponse.class);
+        return chatGptResponse.getChoices().get(0).getMessage().getContent();
+    }
+
+    @Override
+    public String getRecipeDraftApproval(RecipeDraft recipeDraft) {
+        Message systemMessage = new Message("system", "Aşağıdaki yazının yemek tarifi olup olmadığını tespit et." +
+            " Cevabı dictionary şeklinde ver, \"approved\" key'i yemek tarifi ise true, değilse false değerini alsın, "
+            + "\"reason\" approved değeri false ise neden false olduğunu bir cümlede açıklasın, true ise null dönsün.");
+
+        List<Message> messages = new ArrayList<>();
+        messages.add(systemMessage);
+        messages.add(new Message("user", "Yazı: " + recipeDraft.toStringForChatGpt()) );
         ChatGptRequest request = new ChatGptRequest(model, messages);
         ChatGptResponse chatGptResponse = template.postForObject(apiUrl, request, ChatGptResponse.class);
         return chatGptResponse.getChoices().get(0).getMessage().getContent();

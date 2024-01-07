@@ -3,9 +3,12 @@ package com.cookingapp.cookingapp.controller;
 import com.cookingapp.cookingapp.dto.IngredientDto;
 import com.cookingapp.cookingapp.dto.RecipeDto;
 import com.cookingapp.cookingapp.entity.Ingredient;
+import com.cookingapp.cookingapp.entity.IngredientDraft;
 import com.cookingapp.cookingapp.entity.Member;
 import com.cookingapp.cookingapp.entity.Recipe;
+import com.cookingapp.cookingapp.entity.RecipeDraft;
 import com.cookingapp.cookingapp.model.RecipeES;
+import com.cookingapp.cookingapp.service.AsyncRecipeService;
 import com.cookingapp.cookingapp.service.LikeService;
 import com.cookingapp.cookingapp.service.MemberService;
 import com.cookingapp.cookingapp.service.RecipeESService;
@@ -20,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -54,6 +58,8 @@ public class RecipeController {
 
     private final RecipeServiceFacade recipeServiceFacade;
 
+    private final AsyncRecipeService asyncRecipeService;
+
     @GetMapping(value = "/search")
     public ResponseEntity scrapeAndCreateNewFoodRecipe(@RequestParam(required = true) String foodName){
         log.info("/v1/recipes/search endpoint has been called with @RequestParam = {}" , foodName);
@@ -61,11 +67,11 @@ public class RecipeController {
         foodName = Util.removeSpaces(foodName);
         // List<Recipe> foundRecipe = recipeService.getRecipeByName(Util.splitByDashAndUpperCaseInitials(foodName));
 
-        List<RecipeES> foundRecipe = recipeESService.searchRecipe(foodName);
+        List<RecipeES> foundRecipeList = recipeESService.searchRecipe(foodName);
 
-        if (!foundRecipe.isEmpty()) {
+        if (!foundRecipeList.isEmpty()) {
            //  return ResponseEntity.ok(foundRecipe.get(0).toDto());
-            return ResponseEntity.ok(foundRecipe);
+            return ResponseEntity.ok(foundRecipeList);
         }
 
         foodName = Util.turkishCharsToEnglish(foodName);
@@ -79,14 +85,14 @@ public class RecipeController {
     }
 
     @GetMapping
-    public ResponseEntity getAllRecipes(){
+    public ResponseEntity<List<RecipeDto>> getAllRecipes(){
         log.info("/v1/recipes endpoint has been called");
         List<Recipe> recipeList = this.recipeService.getAllRecipe();
-        return ResponseEntity.ok(recipeList.stream().map(Recipe::toDto));
+        return ResponseEntity.ok(recipeList.stream().map(Recipe::toDto).toList());
     }
 
     @GetMapping(value="/category/{category}")
-    public ResponseEntity getCategory(@PathVariable String category) {
+    public ResponseEntity<List<RecipeDto>> getCategory(@PathVariable String category) {
         log.info("/v1/recipes/category endpoint has been called with @PathVariable = {}" , category);
         switch (category){
             case "corba": {
@@ -108,11 +114,11 @@ public class RecipeController {
             default:
                 category = null;
         }
-        return ResponseEntity.ok(recipeService.getRecipesByCategory(category).stream().map(Recipe::toDto));
+        return ResponseEntity.ok(recipeService.getRecipesByCategory(category).stream().map(Recipe::toDto).toList());
     }
 
     @GetMapping(value = "/{id}")
-    public ResponseEntity getRecipe(@PathVariable Long id){
+    public ResponseEntity<RecipeDto> getRecipe(@PathVariable Long id){
         log.info("/v1/recipes/{id} endpoint has been called with @PathVariable = {}" , id);
         Recipe recipe = recipeService.getRecipeById(id);
         if( recipe != null ){
@@ -124,7 +130,7 @@ public class RecipeController {
     }
 
     @DeleteMapping(value = "/{id}")
-    public ResponseEntity deleteRecipe(@PathVariable Long id){
+    public ResponseEntity<Void> deleteRecipe(@PathVariable Long id){
         log.info("DELETE /v1/recipes/{id} endpoint has been called with @PathVariable = {}" , id);
         if (this.recipeService.getRecipeById(id) == null){
             return ResponseEntity.notFound().build();
@@ -136,7 +142,7 @@ public class RecipeController {
     }
 
     @GetMapping(value = "/recipe-of-the-day")
-    public ResponseEntity getRecipeOfTheDay(){
+    public ResponseEntity<RecipeDto> getRecipeOfTheDay(){
         log.info("getRecipeOfTheDay has been called");
         if(this.recipeService.getDailyRandomRecipe() != null){
             return ResponseEntity.ok(this.recipeService.getDailyRandomRecipe().toDto());
@@ -148,24 +154,23 @@ public class RecipeController {
     }
 
     @PostMapping("/{recipeId}/like")
-    public ResponseEntity likeRecipe(@PathVariable Long recipeId) {
+    public ResponseEntity<String> likeRecipe(@PathVariable Long recipeId) {
         log.info("POST [LIKE] /v1/recipes/{recipeId}/like endpoint has been called with @PathVariable = {}" , recipeId);
         //String email = SecurityContextHolder.getContext().getAuthentication().getPrincipal() ??
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof UserDetails userDetails) {
             String email = userDetails.getUsername();
             Optional<Member> member = memberService.getMemberByEmail(email);
-            if(member.isPresent()){
-                if(likeService.findLikeByRecipeAndMember(recipeId,member.get()) != null){
+            if(member.isPresent() && likeService.findLikeByRecipeAndMember(recipeId,member.get()) != null){
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Recipe has already been liked.");
-                }
+
             }
             member.ifPresent(value -> likeService.save(recipeId, value));
         }
         return ResponseEntity.ok().build();
     }
     @DeleteMapping("/{recipeId}/like")
-    public ResponseEntity unlikeRecipe(@PathVariable Long recipeId) {
+    public ResponseEntity<Void> unlikeRecipe(@PathVariable Long recipeId) {
         log.info("DELETE [UNLIKE] /v1/recipes/{recipeId}/like endpoint has been called with @PathVariable = {}" , recipeId);
         //String email = SecurityContextHolder.getContext().getAuthentication().getPrincipal() ??
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -178,24 +183,22 @@ public class RecipeController {
     }
 
     @PostMapping("/{recipeId}/save")
-    public ResponseEntity saveRecipe(@PathVariable Long recipeId) {
+    public ResponseEntity<String> saveRecipe(@PathVariable Long recipeId) {
         log.info("POST [SAVE] /v1/recipes/{recipeId}/save endpoint has been called with @PathVariable = {}" , recipeId);
         //String email = SecurityContextHolder.getContext().getAuthentication().getPrincipal() ??
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof UserDetails userDetails) {
             String email = userDetails.getUsername();
             Optional<Member> member = memberService.getMemberByEmail(email);
-            if(member.isPresent()){
-                if(savedRecipeService.findSaveByRecipeAndMember(recipeId, member.get()) != null){
+            if(member.isPresent() && savedRecipeService.findSaveByRecipeAndMember(recipeId, member.get()) != null){
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Recipe has already been saved.");
-                }
             }
             member.ifPresent(value -> savedRecipeService.save(recipeId, value));
         }
         return ResponseEntity.ok().build();
     }
     @DeleteMapping("/{recipeId}/save")
-    public ResponseEntity unsaveRecipe(@PathVariable Long recipeId) {
+    public ResponseEntity<Void> unsaveRecipe(@PathVariable Long recipeId) {
         log.info("DELETE [SAVE] /v1/recipes/{recipeId}/save endpoint has been called with @PathVariable = {}" , recipeId);
         //String email = SecurityContextHolder.getContext().getAuthentication().getPrincipal() ??
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -208,7 +211,7 @@ public class RecipeController {
     }
 
     @GetMapping(value = "/saved")
-    public ResponseEntity getSavedRecipes(){
+    public ResponseEntity<List<RecipeDto>> getSavedRecipes(){
         log.info("getSavedRecipes has been called");
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof UserDetails userDetails) {
@@ -226,7 +229,7 @@ public class RecipeController {
     }
 
     @GetMapping(value = "/liked")
-    public ResponseEntity getLikedRecipes(){
+    public ResponseEntity<List<RecipeDto>> getLikedRecipes(){
         log.info("getLikedRecipes has been called");
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof UserDetails userDetails) {
@@ -244,7 +247,7 @@ public class RecipeController {
     }
 
     @GetMapping(value = "/deleteAll")
-    public ResponseEntity deleteAllElastic(){
+    public ResponseEntity<Void> deleteAllElastic(){
         recipeESService.deleteAll();
         return ResponseEntity.ok().build();
     }
@@ -261,19 +264,27 @@ public class RecipeController {
 
     // todo foto ekleme??
     @PostMapping
-    // @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<RecipeDto> addRecipe(@RequestBody RecipeDto recipeDto){
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<RecipeDraft> addRecipe(@RequestBody RecipeDto recipeDto){
         log.info("addRecipe has been called");
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof UserDetails userDetails) {
             String email = userDetails.getUsername();
             Optional<Member> member = memberService.getMemberByEmail(email);
             if( member.isPresent() ){
+                List<IngredientDraft> ingredientList = recipeDto.getIngredients().stream()
+                    .map(IngredientDto::toIngredientDraft)
+                    .toList();
+                RecipeDraft recipeDraft = recipeServiceFacade.saveRecipeToDraft(recipeDto.convertToRecipeDraft(), ingredientList, member.get());
+                asyncRecipeService.processRecipeDraft(recipeDraft);
+                /*
                 List<Ingredient> ingredientList = recipeDto.getIngredients().stream()
                     .map(IngredientDto::toIngredient)
                     .toList();
                 Recipe recipe = recipeServiceFacade.saveRecipe(recipeDto.convertToRecipe(), ingredientList, member.get());
-                return ResponseEntity.ok(recipe.toDto());
+
+                 */
+                return ResponseEntity.ok().build();
             }
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

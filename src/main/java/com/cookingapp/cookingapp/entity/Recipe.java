@@ -4,6 +4,7 @@ import com.cookingapp.cookingapp.dto.InstructionDto;
 import com.cookingapp.cookingapp.dto.RecipeDto;
 import com.cookingapp.cookingapp.model.IngredientES;
 import com.cookingapp.cookingapp.model.RecipeES;
+import com.cookingapp.cookingapp.response.RecipeHeaderResponse;
 import com.cookingapp.cookingapp.util.Util;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -45,6 +46,9 @@ public class Recipe {
     @Column(length = 200)
     private String imageUrl;
 
+    @Lob
+    private String image;
+
     @Column(length = 50)
     private String recipeName;
 
@@ -78,26 +82,50 @@ public class Recipe {
     @PrePersist
     public void prePersist() {
         this.createDate = LocalDateTime.now();
+        if(score == null){
+            this.score = 0.0;
+        }
     }
+
 
     public RecipeDto toDto(){
         RecipeDto recipeDto = new RecipeDto();
         recipeDto.setId(id);
         recipeDto.setImageUrl(imageUrl);
+        recipeDto.setImage(image);
         recipeDto.setRecipeName(recipeName);
         recipeDto.setCookingTime(cookingTime);
         recipeDto.setPreparationTime(preparationTime);
         recipeDto.setTotalTime(Util.getTotalTime(cookingTime, preparationTime));
         recipeDto.setServesFor(servesFor);
-        recipeDto.setDifficultyLevel(DifficultyLevel.toString(difficultyLevel));
-        recipeDto.setCategory(Category.toString(category));
-        List<IngredientDto> ingredientDtos = ingredients.stream()
-            .map(Ingredient::toDto)
-            .toList();
-        recipeDto.setIngredients(new ArrayList<>(ingredientDtos));
+        recipeDto.setDifficultyLevel(difficultyLevel != null ? DifficultyLevel.toString(difficultyLevel) : null);
+        recipeDto.setCategory(category != null ? Category.toString(category) : null);
+        if( ingredients != null ) {
+            List<IngredientDto> ingredientDtos = ingredients.stream()
+                .map(Ingredient::toDto)
+                .toList();
+            recipeDto.setIngredients(new ArrayList<>(ingredientDtos));
+        }
+        else{
+            recipeDto.setIngredients(null);
+        }
         recipeDto.setInstructions(this.convertInstructions());
         recipeDto.setScore(score);
         return recipeDto;
+    }
+
+    public RecipeHeaderResponse toHeaderResponse(){
+        RecipeHeaderResponse response = new RecipeHeaderResponse();
+        response.setId(id);
+        response.setImageUrl(imageUrl);
+        response.setImage(image);
+        response.setRecipeName(recipeName);
+        response.setTotalTime(Util.getTotalTime(cookingTime, preparationTime));
+        response.setServesFor(servesFor);
+        response.setDifficultyLevel(DifficultyLevel.toString(difficultyLevel));
+        response.setCategory( Category.toString(category));
+        response.setScore(score);
+        return response;
     }
 
     private ArrayList<InstructionDto> convertInstructions(){
@@ -120,6 +148,7 @@ public class Recipe {
         RecipeES recipeES = new RecipeES();
         recipeES.setId(id);
         recipeES.setImageUrl(imageUrl);
+        recipeES.setImage(image);
         recipeES.setRecipeName(recipeName);
         recipeES.setCookingTime(cookingTime);
         recipeES.setPreparationTime(preparationTime);

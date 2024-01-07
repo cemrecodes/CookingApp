@@ -27,6 +27,9 @@ public class RecipeES {
   @Field(type = FieldType.Text)
   private String recipeName;
 
+  @Field(type = FieldType.Text, index = false, store = true)
+  private String image;
+
   @Field(type = FieldType.Keyword)
   private String cookingTime;
 

@@ -21,6 +21,7 @@ public class RecipeMemberServiceImp implements RecipeMemberService {
   public RecipeMember save(Recipe recipe, Member member) {
     RecipeMember recipeMember = new RecipeMember();
     recipeMember.setRecipe(recipe);
+    recipeMember.setMember(member);
     return recipeMemberRepository.save(recipeMember);
   }
 
