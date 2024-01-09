@@ -15,4 +15,5 @@ public interface ScrapeService {
     RecipeDto getRecipe(HashMap<String, Object> recipeMap);
     Map<String, Object> getTerms(RecipeDto recipe);
     HashMap<Integer, ArrayList<String>> getTermsMap(Map<String, Object> terms);
-  }
+
+}

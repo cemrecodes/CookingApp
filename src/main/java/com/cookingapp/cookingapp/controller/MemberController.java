@@ -5,13 +5,13 @@ import com.cookingapp.cookingapp.dto.MemberDto;
 import com.cookingapp.cookingapp.dto.RecipeDto;
 import com.cookingapp.cookingapp.entity.Member;
 import com.cookingapp.cookingapp.entity.Recipe;
-import com.cookingapp.cookingapp.response.MemberProfileResponse;
-import com.cookingapp.cookingapp.response.RecipeHeaderResponse;
 import com.cookingapp.cookingapp.service.GoogleService;
 import com.cookingapp.cookingapp.service.MemberService;
 import com.cookingapp.cookingapp.service.RecipeMemberService;
 import com.cookingapp.cookingapp.service.impl.MemberServiceImp;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -46,16 +46,13 @@ public class MemberController {
 
     private final JwtService jwtService;
 
-    /*
     @GetMapping(value = "/{token}")
-    public ResponseEntity verifyToken(@PathVariable String token) {
+    public ResponseEntity verifyToken(@PathVariable String token) throws GeneralSecurityException, IOException {
         return ResponseEntity.ok(this.googleService.verifyIdToken(token));
     }
 
-     */
-
     @PostMapping(value = "/login/google")
-    public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> requestBody){
+    public ResponseEntity login(@RequestBody Map<String, String> requestBody){
         String idToken = requestBody.get("idToken");
         log.info("Request: {}" , idToken);
         GoogleIdToken googleIdToken = googleService.verifyIdToken(idToken);
@@ -78,7 +75,7 @@ public class MemberController {
 
 
     @GetMapping
-    public ResponseEntity<MemberProfileResponse> getMember(){
+    public ResponseEntity getMember(){
         log.info("getMember has been called");
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
@@ -86,46 +83,14 @@ public class MemberController {
             String email = userDetails.getUsername();
             Optional<Member> member = memberService.getMemberByEmail(email);
             if (member.isPresent()) {
-                MemberProfileResponse profileResponse = new MemberProfileResponse();
-                List<RecipeHeaderResponse> recipeList = recipeMemberService.getRecipesByMember(member.get())
-                    .stream()
-                    .map(Recipe::toHeaderResponse)
-                    .toList();
-                profileResponse.setId(member.get().getId());
-                profileResponse.setName(member.get().getName());
-                profileResponse.setSurname(member.get().getSurname());
-                profileResponse.setProfilePicUrl(member.get().getProfilePicUrl());
-                profileResponse.setEmail(member.get().getEmail());
-                profileResponse.setRecipes(recipeList);
-                log.info("Response: {}", profileResponse);
-                return ResponseEntity.ok(profileResponse);
+                log.info("Response: {}", member.get().toDto());
+                return ResponseEntity.ok(member.get().toDto());
             }
         }
 
         return ResponseEntity.notFound().build();
     }
 
-    @GetMapping(value = "/{memberId}")
-
-    public ResponseEntity<MemberProfileResponse> getMemberById(@PathVariable Long memberId){
-        log.info("getMemberById has been called with member id: {}", memberId);
-        Optional<Member> member = memberService.getMemberById(memberId);
-        if(member.isPresent()){
-            MemberProfileResponse profileResponse = new MemberProfileResponse();
-            List<RecipeHeaderResponse> recipeList = recipeMemberService.getRecipesByMemberId(memberId)
-                .stream()
-                .map(Recipe::toHeaderResponse)
-                .toList();
-            profileResponse.setId(memberId);
-            profileResponse.setName(member.get().getName());
-            profileResponse.setProfilePicUrl(member.get().getProfilePicUrl());
-            profileResponse.setSurname(member.get().getSurname());
-            profileResponse.setRecipes(recipeList);
-            return ResponseEntity.ok(profileResponse);
-        }
-
-        return ResponseEntity.notFound().build();
-    }
     /*
     @GetMapping
     public ResponseEntity<List<Member>> getAll(){
@@ -136,7 +101,6 @@ public class MemberController {
 
     @GetMapping("/{memberId}/recipes")
     public ResponseEntity<List<RecipeDto>> getRecipesByMember(@PathVariable Long memberId){
-        log.info("getRecipesByMember has been called with memberId: {}", memberId);
         List<RecipeDto> recipeDtoList = recipeMemberService.getRecipesByMemberId(memberId).stream().map(Recipe::toDto).toList();
         return ResponseEntity.ok(recipeDtoList);
     }

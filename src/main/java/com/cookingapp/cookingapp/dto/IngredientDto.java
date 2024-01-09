@@ -1,7 +1,6 @@
 package com.cookingapp.cookingapp.dto;
 
 import com.cookingapp.cookingapp.entity.Ingredient;
-import com.cookingapp.cookingapp.entity.IngredientDraft;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
@@ -18,13 +17,6 @@ public class IngredientDto {
     ingredientObject.setIngredient(ingredient);
     ingredientObject.setAmount(amount);
     return ingredientObject;
-  }
-
-  public IngredientDraft toIngredientDraft(){
-    IngredientDraft ingredientDraft = new IngredientDraft();
-    ingredientDraft.setIngredient(ingredient);
-    ingredientDraft.setAmount(amount);
-    return ingredientDraft;
   }
 
 }
