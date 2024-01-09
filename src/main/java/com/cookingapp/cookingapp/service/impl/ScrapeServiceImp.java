@@ -170,11 +170,6 @@ public class ScrapeServiceImp implements ScrapeService {
         ArrayList<InstructionDto> instructionDtos = getInstructionsArray(recipeInstructions);
         recipeDto.setInstructions(instructionDtos);
 
-        // get difficulty and category of the recipe
-        Map<String, Object> difficultyAndCategory = this.getDifficultyAndCategory(recipeDto);
-        recipeDto.setDifficultyLevel((String) difficultyAndCategory.get("difficulty"));
-        recipeDto.setCategory((String) difficultyAndCategory.get("category"));
-
         return recipeDto;
     }
 
