@@ -8,6 +8,8 @@ public interface RecipeESService{
 
   RecipeES save(RecipeES recipeES);
 
+  List<RecipeES> getAll();
+
   List<RecipeES> saveAll(List<RecipeES> recipeESList);
 
   void deleteAll();
@@ -15,5 +17,7 @@ public interface RecipeESService{
   List<RecipeES> searchRecipe(String recipeName);
 
   List<RecipeES> extractItemsFromResponse(SearchResponse<RecipeES> response);
+
+  void delete(Long id);
 
 }

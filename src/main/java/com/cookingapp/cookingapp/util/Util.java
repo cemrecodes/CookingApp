@@ -85,7 +85,8 @@ public class Util {
     }
 
     public static int convertToMinutes(String duration) {
-        if (duration.contains("saat") && duration.contains("dakika")) {
+        duration = duration.toLowerCase();
+        if (duration.toLowerCase().contains("saat") && duration.toLowerCase().contains("dakika")) {
             String pattern = "(\\d+) saat (\\d+) dakika";
             Pattern regex = Pattern.compile(pattern);
             Matcher matcher = regex.matcher(duration);
@@ -96,10 +97,10 @@ public class Util {
             }
         }
 
-        if (duration.contains("H") || duration.contains("saat")) {
+        if (duration.contains("H") || duration.toLowerCase().contains("saat")) {
             int hours = extractNumber(duration);
             return hours * 60;
-        } else if (duration.contains("M") || duration.contains("dakika")) {
+        } else if (duration.contains("M") || duration.toLowerCase().contains("dakika")) {
             return extractNumber(duration);
         }
 
@@ -153,6 +154,26 @@ public class Util {
             }
             case "içecek" -> {
                 return "DRINK";
+            }
+            default -> {
+                return "NOT SPECIFIED";
+            }
+        }
+    }
+
+    public static String translateCategoryToTurkish(String category) {
+        switch (category) {
+            case "SOUP" -> {
+                return "çorba";
+            }
+            case "MAIN_DISH" -> {
+                return "ana yemek";
+            }
+            case "DESSERT" -> {
+                return "tatlı";
+            }
+            case "DRINK" -> {
+                return "içecek";
             }
             default -> {
                 return "NOT SPECIFIED";

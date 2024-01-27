@@ -7,7 +7,8 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
 
 public interface RecipeESRepository extends ElasticsearchRepository<RecipeES, Long > {
     RecipeES save(RecipeES recipeES);
+    @Override
+    Page<RecipeES> findAll(Pageable pageable);
 
-  @Override
-  Page<RecipeES> findAll(Pageable pageable);
+
 }

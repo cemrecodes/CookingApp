@@ -9,8 +9,10 @@ import com.cookingapp.cookingapp.repo.RecipeESRepository;
 import com.cookingapp.cookingapp.service.RecipeESService;
 import com.cookingapp.cookingapp.util.ESUtil;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -29,8 +31,23 @@ public class RecipeESServiceImp implements RecipeESService {
     return recipeESRepository.save(recipeES);
   }
 
+  @Override
+  public List<RecipeES> getAll() {
+    Iterable<RecipeES> iterableRecipes = recipeESRepository.findAll();
+
+    // Iterable'dan List'e dönüşüm
+    List<RecipeES> recipeList = new ArrayList<>();
+    iterableRecipes.forEach(recipeList::add);
+
+    return recipeList;
+  }
+
   public List<RecipeES> saveAll(List<RecipeES> recipeESList){
     return (List<RecipeES>) recipeESRepository.saveAll(recipeESList);
+  }
+
+  public void delete(Long id){
+    recipeESRepository.deleteById(id);
   }
 
   public void deleteAll() {

@@ -6,6 +6,7 @@ import com.cookingapp.cookingapp.entity.Ingredient;
 import com.cookingapp.cookingapp.entity.Member;
 import com.cookingapp.cookingapp.entity.Recipe;
 import com.cookingapp.cookingapp.model.RecipeES;
+import com.cookingapp.cookingapp.response.RecipeHeaderResponse;
 import com.cookingapp.cookingapp.service.LikeService;
 import com.cookingapp.cookingapp.service.MemberService;
 import com.cookingapp.cookingapp.service.RecipeESService;
@@ -15,6 +16,7 @@ import com.cookingapp.cookingapp.service.SavedRecipeService;
 import com.cookingapp.cookingapp.service.impl.ScrapeServiceImp;
 import com.cookingapp.cookingapp.util.Util;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,27 +57,23 @@ public class RecipeController {
     private final RecipeServiceFacade recipeServiceFacade;
 
     @GetMapping(value = "/search")
-    public ResponseEntity scrapeAndCreateNewFoodRecipe(@RequestParam(required = true) String foodName){
+    public ResponseEntity<List<RecipeHeaderResponse>> scrapeAndCreateNewFoodRecipe(@RequestParam(required = true) String foodName){
         log.info("/v1/recipes/search endpoint has been called with @RequestParam = {}" , foodName);
-        ResponseEntity result;
-        foodName = Util.removeSpaces(foodName);
-        // List<Recipe> foundRecipe = recipeService.getRecipeByName(Util.splitByDashAndUpperCaseInitials(foodName));
 
-        List<RecipeES> foundRecipe = recipeESService.searchRecipe(foodName);
+        List<RecipeHeaderResponse> foundRecipe = recipeESService.searchRecipe(foodName).stream().map(RecipeES::toHeaderResponse).toList();
 
         if (!foundRecipe.isEmpty()) {
-           //  return ResponseEntity.ok(foundRecipe.get(0).toDto());
             return ResponseEntity.ok(foundRecipe);
         }
 
+        foodName = Util.removeSpaces(foodName);
         foodName = Util.turkishCharsToEnglish(foodName);
         Recipe recipe = this.scrapeServiceImp.scrapeAndCreateNewRecipe(foodName);
         if (recipe != null) {
-            result = ResponseEntity.ok(recipe.toDto());
+            return ResponseEntity.ok(Collections.singletonList(recipe.toHeaderResponse()));
         } else {
-            result = ResponseEntity.badRequest().body("There was an error with scraping.");
+            return ResponseEntity.badRequest().build();
         }
-        return result;
     }
 
     @GetMapping
@@ -83,6 +81,13 @@ public class RecipeController {
         log.info("/v1/recipes endpoint has been called");
         List<Recipe> recipeList = this.recipeService.getAllRecipe();
         return ResponseEntity.ok(recipeList.stream().map(Recipe::toDto));
+    }
+
+    @GetMapping(value = "/es")
+    public ResponseEntity getAllRecipesES(){
+        log.info("/v1/recipes/es endpoint has been called");
+        List<RecipeES> recipeList = this.recipeESService.getAll();
+        return ResponseEntity.ok(recipeList);
     }
 
     @GetMapping(value="/category/{category}")
@@ -131,8 +136,16 @@ public class RecipeController {
         }
         else{
             this.recipeService.deleteRecipeById(id);
+            this.recipeESService.delete(id);
             return ResponseEntity.ok().build();
         }
+    }
+
+    @DeleteMapping(value = "/es/{id}")
+    public ResponseEntity deleteRecipeES(@PathVariable Long id){
+        log.info("DELETE /v1/recipes/es/{id} endpoint has been called with @PathVariable = {}" , id);
+        this.recipeESService.delete(id);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping(value = "/recipe-of-the-day")
