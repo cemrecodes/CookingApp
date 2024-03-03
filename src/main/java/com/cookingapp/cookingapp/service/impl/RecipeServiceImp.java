@@ -1,7 +1,12 @@
 package com.cookingapp.cookingapp.service.impl;
 
+import com.cookingapp.cookingapp.dto.LoggedRecipeResponseDTO;
+import com.cookingapp.cookingapp.dto.RecipeDto;
+import com.cookingapp.cookingapp.dto.RecipeProjection;
+import com.cookingapp.cookingapp.dto.RecipeWithLikesAndSaves;
 import com.cookingapp.cookingapp.entity.Category;
 import com.cookingapp.cookingapp.entity.Recipe;
+import com.cookingapp.cookingapp.repo.IRecipeResponse;
 import com.cookingapp.cookingapp.repo.RecipeRepository;
 import com.cookingapp.cookingapp.service.RecipeService;
 import java.util.Random;
@@ -17,6 +22,8 @@ public class RecipeServiceImp implements RecipeService {
 
     private final RecipeRepository recipeRepository;
     private Recipe dailyRandomRecipe;
+    // todo make this bean
+    private final Random random = new Random();
 
     @Override
     public Recipe save(Recipe recipe) {
@@ -31,6 +38,18 @@ public class RecipeServiceImp implements RecipeService {
     @Override
     public List<Recipe> getAllRecipe(){
         return this.recipeRepository.findAll();
+    }
+
+    @Override
+    public List<IRecipeResponse> getAllRecipeLoggedIn(Long memberId) {
+        List<IRecipeResponse> responses = this.recipeRepository.getRecipesLoggedIn(memberId);
+        return responses;
+    }
+
+    @Override
+    public List<RecipeWithLikesAndSaves> getAllRecipeLoggedIn2(Long memberId) {
+        List<RecipeWithLikesAndSaves> responses = this.recipeRepository.getRecipesLoggedIn2(memberId);
+        return responses;
     }
 
     @Override
@@ -53,7 +72,6 @@ public class RecipeServiceImp implements RecipeService {
     public void chooseDailyRandomRecipe() {
         List<Recipe> recipeList = this.getAllRecipe();
         if(!recipeList.isEmpty()){
-            Random random = new Random();
             int randomIndex = random.nextInt(recipeList.size());
             dailyRandomRecipe = recipeList.get(randomIndex);
         }

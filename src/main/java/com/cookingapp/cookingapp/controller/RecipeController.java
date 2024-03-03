@@ -1,7 +1,9 @@
 package com.cookingapp.cookingapp.controller;
 
+import com.cookingapp.cookingapp.dto.HeaderResponseWithDetail;
 import com.cookingapp.cookingapp.dto.IngredientDto;
 import com.cookingapp.cookingapp.dto.RecipeDto;
+import com.cookingapp.cookingapp.dto.RecipeWithLikesAndSaves;
 import com.cookingapp.cookingapp.entity.Ingredient;
 import com.cookingapp.cookingapp.entity.Member;
 import com.cookingapp.cookingapp.entity.Recipe;
@@ -18,6 +20,7 @@ import com.cookingapp.cookingapp.util.Util;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -79,8 +82,45 @@ public class RecipeController {
     @GetMapping
     public ResponseEntity getAllRecipes(){
         log.info("/v1/recipes endpoint has been called");
+
+        /*
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            String email = userDetails.getUsername();
+            Optional<Member> member = memberService.getMemberByEmail(email);
+            if(member.isPresent()){
+                return ResponseEntity.ok(this.recipeService.getAllRecipeLoggedIn(member.get().getId()));
+            }
+        }
+
+         */
+
         List<Recipe> recipeList = this.recipeService.getAllRecipe();
         return ResponseEntity.ok(recipeList.stream().map(Recipe::toDto));
+    }
+
+    @GetMapping("/test/{memberId}")
+    public ResponseEntity getAllRecipesByMemberId(@PathVariable Long memberId){
+        log.info("/v1/recipes endpoint has been called");
+
+        /*
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            String email = userDetails.getUsername();
+            Optional<Member> member = memberService.getMemberByEmail(email);
+            if(member.isPresent()){
+                return ResponseEntity.ok(this.recipeService.getAllRecipeLoggedIn(member.get().getId()));
+            }
+        }
+
+         */
+        List<RecipeWithLikesAndSaves> recipeWithLikesAndSavesList = this.recipeService.getAllRecipeLoggedIn2(memberId);
+
+        List<HeaderResponseWithDetail> responseList = recipeWithLikesAndSavesList.stream()
+            .map(r -> new HeaderResponseWithDetail(r.getRecipe().toDto(), r.isLiked(), r.isSaved()))
+            .toList();
+
+        return ResponseEntity.ok(responseList);
     }
 
     @GetMapping(value = "/es")

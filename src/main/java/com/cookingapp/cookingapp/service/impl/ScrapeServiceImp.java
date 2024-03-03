@@ -85,6 +85,8 @@ public class ScrapeServiceImp implements ScrapeService {
         recipeDto.setId(recipe.getId());
          */
 
+        ImageServiceImp.downloadImage(recipeDto.getImageUrl());
+
         return recipeServiceFacade.saveRecipe(recipeDto.convertToRecipe(), ingredients);
     }
 
