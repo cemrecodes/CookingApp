@@ -7,6 +7,7 @@ import com.cookingapp.cookingapp.entity.Ingredient;
 import com.cookingapp.cookingapp.entity.Member;
 import com.cookingapp.cookingapp.entity.Recipe;
 import com.cookingapp.cookingapp.service.ChatGptService;
+import com.cookingapp.cookingapp.service.GeminiService;
 import com.cookingapp.cookingapp.service.IngredientService;
 import com.cookingapp.cookingapp.service.RecipeESService;
 import com.cookingapp.cookingapp.service.RecipeMemberService;
@@ -32,6 +33,8 @@ public class RecipeServiceFacadeImp implements RecipeServiceFacade {
   private final RecipeMemberService recipeMemberService;
 
   private final ChatGptService chatGptService;
+
+  private final GeminiService geminiService;
 
   @Override
   public Recipe saveRecipe(Recipe recipe, List<Ingredient> ingredientList) {
@@ -66,8 +69,9 @@ public class RecipeServiceFacadeImp implements RecipeServiceFacade {
 
   /* gets difficulty and category of recipe from chatgpt */
   private Map<String, Object> getDifficultyAndCategory(RecipeDto recipe) {
-    String chatGptResponse = this.chatGptService.getDifficultyLevelAndCategory(recipe);
-    return Util.convertJsonToMap(chatGptResponse);
+    String aiResponse = geminiService.getDifficultyLevelAndCategory(recipe);
+        // this.chatGptService.getDifficultyLevelAndCategory(recipe);
+    return Util.convertJsonToMap(aiResponse);
   }
 
   private void setDifficultyAndCategory(Recipe recipe) {

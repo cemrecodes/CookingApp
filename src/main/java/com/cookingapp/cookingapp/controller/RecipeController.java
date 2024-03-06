@@ -235,6 +235,7 @@ public class RecipeController {
         log.info("POST [SAVE] /v1/recipes/{recipeId}/save endpoint has been called with @PathVariable = {}" , recipeId);
         //String email = SecurityContextHolder.getContext().getAuthentication().getPrincipal() ??
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        // todo bu ne? token tipleri? isAuthenticated? Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (authentication != null && authentication.getPrincipal() instanceof UserDetails userDetails) {
             String email = userDetails.getUsername();
             Optional<Member> member = memberService.getMemberByEmail(email);

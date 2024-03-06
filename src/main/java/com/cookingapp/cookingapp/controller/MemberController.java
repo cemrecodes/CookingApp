@@ -57,7 +57,7 @@ public class MemberController {
     @PostMapping(value = "/login/google")
     public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> requestBody){
         String idToken = requestBody.get("idToken");
-        log.info("Request: {}" , idToken);
+        log.info("Google Login Request has been received.");
         GoogleIdToken googleIdToken = googleService.verifyIdToken(idToken);
         if( googleIdToken != null ){
             // Optional<Member> member = memberService.getMemberByEmail(googleService.getEmail(googleIdToken));
@@ -80,8 +80,9 @@ public class MemberController {
     @GetMapping
     public ResponseEntity<MemberProfileResponse> getMember(){
         log.info("getMember has been called");
+        // todo new auth (shorter)
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
+        if (authentication.isAuthenticated()) {
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             String email = userDetails.getUsername();
             Optional<Member> member = memberService.getMemberByEmail(email);
@@ -97,7 +98,6 @@ public class MemberController {
                 profileResponse.setProfilePicUrl(member.get().getProfilePicUrl());
                 profileResponse.setEmail(member.get().getEmail());
                 profileResponse.setRecipes(recipeList);
-                log.info("Response: {}", profileResponse);
                 return ResponseEntity.ok(profileResponse);
             }
         }

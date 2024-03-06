@@ -43,7 +43,7 @@ public class ImageServiceImp {
       //close the stream
       os.close();
 
-      System.out.println("Image saved");
+      log.info("Image has been saved.");
 
     } catch (IOException e) {
       e.printStackTrace();

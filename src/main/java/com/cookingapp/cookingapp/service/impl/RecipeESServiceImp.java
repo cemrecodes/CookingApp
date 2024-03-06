@@ -57,9 +57,7 @@ public class RecipeESServiceImp implements RecipeESService {
     // Extract the content (List<RecipeES>) from the Page
     List<RecipeES> recipeESList = recipeESPage.getContent();
 
-    for(RecipeES recipe: recipeESList){
-      recipeESRepository.delete(recipe);
-    }
+    recipeESRepository.deleteAll(recipeESList);
 
   }
   public List<RecipeES> searchRecipe(String recipeName){
@@ -70,7 +68,7 @@ public class RecipeESServiceImp implements RecipeESService {
       response = elasticsearchClient.search(q -> q.index("recipes")
           .query(querySupplier.get()), RecipeES.class);
 
-      log.info("Elasticsearch response: {}", response.toString());
+     // log.info("Elasticsearch response: {}", response.toString());
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
