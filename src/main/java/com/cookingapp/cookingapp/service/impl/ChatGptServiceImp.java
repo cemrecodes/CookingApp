@@ -23,7 +23,7 @@ public class ChatGptServiceImp implements ChatGptService {
     @Value("${openai.api.url}")
     private String apiUrl;
 
-    private final RestTemplate template;
+    private final RestTemplate chatGptTemplate;
 
     private final String promptBase = "Aşağıdaki yemek tarifinin zorluğunu belirle(kolay,orta,zor)." +
             "Tarifte geçen bilinmedik yemek yapma terimlerini (Örneğin: benmari usulü, marine etmek, julienne doğrama gibi) varsa tespit et " +
@@ -57,7 +57,7 @@ public class ChatGptServiceImp implements ChatGptService {
         messages.add(exampleAssistantMessage);
         messages.add(new Message("user", recipe.toStringForChatGpt()) );
         ChatGptRequest request = new ChatGptRequest(model, messages);
-        ChatGptResponse chatGptResponse = template.postForObject(apiUrl, request, ChatGptResponse.class);
+        ChatGptResponse chatGptResponse = chatGptTemplate.postForObject(apiUrl, request, ChatGptResponse.class);
         return chatGptResponse.getChoices().get(0).getMessage().getContent();
     }
 
@@ -85,7 +85,7 @@ public class ChatGptServiceImp implements ChatGptService {
         messages.add(exampleAssistantMessage);
         messages.add(new Message("user", "Tarif: " + recipe.toStringForChatGpt()) );
         ChatGptRequest request = new ChatGptRequest(model, messages);
-        ChatGptResponse chatGptResponse = template.postForObject(apiUrl, request, ChatGptResponse.class);
+        ChatGptResponse chatGptResponse = chatGptTemplate.postForObject(apiUrl, request, ChatGptResponse.class);
         return chatGptResponse.getChoices().get(0).getMessage().getContent();
     }
 
@@ -116,7 +116,7 @@ public class ChatGptServiceImp implements ChatGptService {
         messages.add(exampleAssistantMessage);
         messages.add(new Message("user", recipe.toStringForChatGpt()) );
         ChatGptRequest request = new ChatGptRequest(model, messages);
-        ChatGptResponse chatGptResponse = template.postForObject(apiUrl, request, ChatGptResponse.class);
+        ChatGptResponse chatGptResponse = chatGptTemplate.postForObject(apiUrl, request, ChatGptResponse.class);
         return chatGptResponse.getChoices().get(0).getMessage().getContent();
     }
 

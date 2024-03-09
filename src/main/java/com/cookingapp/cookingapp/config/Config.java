@@ -1,6 +1,7 @@
 package com.cookingapp.cookingapp.config;
 
 import com.cookingapp.cookingapp.service.GeminiInterface;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -12,6 +13,9 @@ import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
 @Configuration
 public class Config {
+
+  @Value("${openai.api.key}")
+  private String chatGptApiKey;
 
   @Bean
   public RestTemplate restTemplate(){
@@ -36,4 +40,18 @@ public class Config {
     return factory.createClient(GeminiInterface.class);
   }
 
+  @Bean
+  public RestTemplate chatGptTemplate(){
+    RestTemplate restTemplate = new RestTemplate();
+    restTemplate.getInterceptors().add((request, body, execution) -> {
+      request.getHeaders().add("Authorization", "Bearer " + chatGptApiKey);
+      return execution.execute(request, body);
+    });
+    return restTemplate;
+  }
+
+  @Bean
+  public ModelMapper modelMapper() {
+    return new ModelMapper();
+  }
 }
