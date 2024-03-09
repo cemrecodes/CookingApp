@@ -23,7 +23,7 @@ public class AIController {
     private String apiUrl;
 
     private final GeminiService geminiService;
-    private RestTemplate restTemplate;
+    private final RestTemplate restTemplate;
 
     @PostMapping("/gpt")
     public String getPromptFromChatGPT(@RequestBody String prompt) {

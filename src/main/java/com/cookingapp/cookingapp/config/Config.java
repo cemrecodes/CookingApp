@@ -17,17 +17,22 @@ public class Config {
   @Value("${openai.api.key}")
   private String chatGptApiKey;
 
+  @Value("${gemini.baseurl}")
+  private String geminiBaseUrl;
+
+  @Value("${googleai.api.key}")
+  private String geminiApiKey;
+
   @Bean
   public RestTemplate restTemplate(){
     return new RestTemplate();
   }
 
   @Bean
-  public RestClient geminiRestClient(@Value("${gemini.baseurl}") String baseUrl,
-      @Value("${googleai.api.key}") String apiKey) {
+  public RestClient geminiRestClient() {
     return RestClient.builder()
-        .baseUrl(baseUrl)
-        .defaultHeader("x-goog-api-key", apiKey)
+        .baseUrl(geminiBaseUrl)
+        .defaultHeader("x-goog-api-key", geminiApiKey)
         .defaultHeader("Content-Type", "application/json")
         .defaultHeader("Accept", "application/json")
         .build();
@@ -54,4 +59,5 @@ public class Config {
   public ModelMapper modelMapper() {
     return new ModelMapper();
   }
+
 }

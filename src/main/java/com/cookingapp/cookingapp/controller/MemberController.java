@@ -51,7 +51,6 @@ public class MemberController {
     public ResponseEntity verifyToken(@PathVariable String token) {
         return ResponseEntity.ok(this.googleService.verifyIdToken(token));
     }
-
      */
 
     @PostMapping(value = "/login/google")
