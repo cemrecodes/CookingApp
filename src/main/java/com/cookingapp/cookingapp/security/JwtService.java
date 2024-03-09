@@ -1,4 +1,4 @@
-package com.cookingapp.cookingapp.config;
+package com.cookingapp.cookingapp.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
