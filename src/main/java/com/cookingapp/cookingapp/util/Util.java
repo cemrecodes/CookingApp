@@ -18,6 +18,9 @@ import java.util.regex.Pattern;
 @Component
 public class Util {
 
+    private Util() {
+    }
+
     public static String removeExtraSpaces(String input) {
         return input.replaceAll("\\s+", " ");
     }
