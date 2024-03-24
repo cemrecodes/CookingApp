@@ -20,4 +20,6 @@ public interface RecipeESService{
 
   void delete(Long id);
 
+  RecipeES getRecipeById(Long id);
+
 }

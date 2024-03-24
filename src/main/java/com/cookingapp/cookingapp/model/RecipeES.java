@@ -41,6 +41,9 @@ public class RecipeES {
   @Field(type = FieldType.Keyword)
   private String preparationTime;
 
+  @Field(type = FieldType.Keyword)
+  private String totalTime;
+
   @Field(type = FieldType.Text)
   private String servesFor;
 
@@ -67,7 +70,7 @@ public class RecipeES {
     recipeDto.setRecipeName(recipeName);
     recipeDto.setCookingTime(cookingTime);
     recipeDto.setPreparationTime(preparationTime);
-    recipeDto.setTotalTime(Util.getTotalTime(cookingTime, preparationTime));
+    recipeDto.setTotalTime(totalTime);
     recipeDto.setServesFor(servesFor);
     recipeDto.setDifficultyLevel(difficultyLevel);
     recipeDto.setCategory(category);
@@ -82,7 +85,7 @@ public class RecipeES {
     response.setImageUrl(imageUrl);
     response.setImage(image);
     response.setRecipeName(recipeName);
-    response.setTotalTime(Util.getTotalTime(cookingTime, preparationTime));
+    response.setTotalTime(totalTime);
     response.setServesFor(servesFor);
     response.setDifficultyLevel(Util.translateDifficultyLevelToTurkish(DifficultyLevel.valueOf(difficultyLevel)));
     response.setCategory(Util.translateCategoryToTurkish(category));

@@ -163,7 +163,7 @@ public class ScrapeServiceImp implements ScrapeService {
         // converts preptTime to x saat, x dakika format
         recipeDto.setPreparationTime(Util.parseDuration((String) mappedScript.get("prepTime")));
         // gets total time ( cookTime + prepTime )
-        recipeDto.setTotalTime(Util.getTotalTime(mappedScript.get("cookTime") != null ? (String) mappedScript.get("cookTime") : "0M", (String) mappedScript.get("prepTime") ));
+        recipeDto.setTotalTime(recipeDto.getTotalTime());
 
         // converts ingredients to IngredientDto array
         List<List<String>> recipeIngredients = (List<List<String>>) mappedScript.get("recipeIngredient");

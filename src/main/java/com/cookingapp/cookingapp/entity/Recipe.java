@@ -59,6 +59,9 @@ public class Recipe {
     private String preparationTime;
 
     @Column(length = 20)
+    private String totalTime;
+
+    @Column(length = 20)
     private String servesFor;
 
     @Enumerated
@@ -79,12 +82,14 @@ public class Recipe {
     private Double score;
 
     private boolean termsAdded;
+
     @PrePersist
     public void prePersist() {
         this.createDate = LocalDateTime.now();
         if(score == null){
             this.score = 0.0;
         }
+        this.totalTime = Util.getTotalTime(this.cookingTime, this.preparationTime);
     }
 
     public RecipeDto toDto(){
@@ -94,7 +99,7 @@ public class Recipe {
         recipeDto.setRecipeName(recipeName);
         recipeDto.setCookingTime(cookingTime);
         recipeDto.setPreparationTime(preparationTime);
-        recipeDto.setTotalTime(Util.getTotalTime(cookingTime, preparationTime));
+        recipeDto.setTotalTime(totalTime);
         recipeDto.setServesFor(servesFor);
         recipeDto.setDifficultyLevel(difficultyLevel != null ? DifficultyLevel.toString(difficultyLevel) : null);
         recipeDto.setCategory(category != null ? Category.toString(category) : null);
@@ -118,7 +123,7 @@ public class Recipe {
         response.setImageUrl(imageUrl);
         response.setImage(image);
         response.setRecipeName(recipeName);
-        response.setTotalTime(Util.getTotalTime(cookingTime, preparationTime));
+        response.setTotalTime(totalTime);
         response.setServesFor(servesFor);
         response.setDifficultyLevel(DifficultyLevel.toString(difficultyLevel));
         response.setCategory( Category.toString(category));

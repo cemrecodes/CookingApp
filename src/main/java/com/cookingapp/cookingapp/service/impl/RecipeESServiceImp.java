@@ -83,4 +83,8 @@ public class RecipeESServiceImp implements RecipeESService {
         .map(Hit::source)
         .toList();
   }
+
+  public RecipeES getRecipeById(Long id){
+    return this.recipeESRepository.findById(id).get();
+  }
 }
