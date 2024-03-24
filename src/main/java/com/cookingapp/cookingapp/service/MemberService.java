@@ -11,4 +11,6 @@ public interface MemberService {
     List<Member> getAllMembers();
     Optional<Member> getMemberByEmail(String email);
     Optional<Member> getMemberById(Long memberId);
+
+    Optional<Member> findMemberByEmail(String email);
 }

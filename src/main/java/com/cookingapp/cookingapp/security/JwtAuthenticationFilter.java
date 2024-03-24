@@ -1,7 +1,5 @@
 package com.cookingapp.cookingapp.security;
 
-import com.cookingapp.cookingapp.config.JwtService;
-import com.cookingapp.cookingapp.service.MemberService;
 import com.cookingapp.cookingapp.service.impl.MemberServiceImp;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

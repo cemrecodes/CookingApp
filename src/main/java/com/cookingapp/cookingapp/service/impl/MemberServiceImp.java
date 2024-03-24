@@ -20,6 +20,7 @@ public class MemberServiceImp implements MemberService, UserDetailsService {
     private final MemberRepository memberRepository;
 
     private final static String USER_NOT_FOUND_MESSAGE = "Member (user) with email %s not found";
+
     /*
     @Override
     @Transactional
@@ -64,13 +65,18 @@ public class MemberServiceImp implements MemberService, UserDetailsService {
     }
 
     @Override
-    public Optional<Member>getMemberByEmail(String email) {
+    public Optional<Member> getMemberByEmail(String email) {
         return memberRepository.findByEmail(email);
     }
 
     @Override
     public Optional<Member> getMemberById(Long memberId) {
         return memberRepository.findById(memberId);
+    }
+
+    @Override
+    public Optional<Member> findMemberByEmail(String email) {
+        return memberRepository.findByEmail(email);
     }
 
     @Override

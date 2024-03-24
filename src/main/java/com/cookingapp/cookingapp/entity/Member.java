@@ -6,10 +6,12 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.util.Collection;
 import java.util.Collections;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,6 +30,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @Setter
 @EqualsAndHashCode(of = {"id"})
 @ToString
+@Builder
 public class Member implements UserDetails {
 
     @Id
@@ -86,12 +89,7 @@ public class Member implements UserDetails {
     public enum LoginType {
         GOOGLE,
         FACEBOOK,
-        NONE
-    }
-
-    public void setPassword(String password) {
-        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        this.password = passwordEncoder.encode(password);
+        INTERNAL
     }
 
     public MemberDto toDto(){
@@ -104,5 +102,9 @@ public class Member implements UserDetails {
         return memberDto;
     }
 
-
+    @PrePersist
+    public void setPassword() {
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        this.password = passwordEncoder.encode(password);
+    }
 }

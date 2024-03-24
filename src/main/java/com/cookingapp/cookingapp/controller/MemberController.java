@@ -1,6 +1,10 @@
 package com.cookingapp.cookingapp.controller;
 
-import com.cookingapp.cookingapp.config.JwtService;
+import com.cookingapp.cookingapp.dto.LoginRequest;
+import com.cookingapp.cookingapp.dto.RegisterRequest;
+import com.cookingapp.cookingapp.entity.Member.LoginType;
+import com.cookingapp.cookingapp.entity.MemberRole;
+import com.cookingapp.cookingapp.security.JwtService;
 import com.cookingapp.cookingapp.dto.MemberDto;
 import com.cookingapp.cookingapp.dto.RecipeDto;
 import com.cookingapp.cookingapp.entity.Member;
@@ -10,6 +14,7 @@ import com.cookingapp.cookingapp.response.RecipeHeaderResponse;
 import com.cookingapp.cookingapp.service.GoogleService;
 import com.cookingapp.cookingapp.service.MemberService;
 import com.cookingapp.cookingapp.service.RecipeMemberService;
+import com.cookingapp.cookingapp.service.impl.AuthenticationService;
 import com.cookingapp.cookingapp.service.impl.MemberServiceImp;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import java.util.Map;
@@ -46,12 +51,50 @@ public class MemberController {
 
     private final JwtService jwtService;
 
+    private final AuthenticationService authService;
+
     /*
     @GetMapping(value = "/{token}")
     public ResponseEntity verifyToken(@PathVariable String token) {
         return ResponseEntity.ok(this.googleService.verifyIdToken(token));
     }
      */
+
+    @PostMapping(value = "/register")
+    public ResponseEntity<String> register(@RequestBody RegisterRequest registerRequest){
+        log.info("Register request has been received.");
+        if(memberService.findMemberByEmail(registerRequest.getEmail()).isPresent()){
+            // todo general entity for error
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("There is a user registered with this email already");
+        }
+
+        Member member = Member.builder().email(registerRequest.getEmail())
+            .memberRole(MemberRole.USER)
+            .name(registerRequest.getName())
+            .surname(registerRequest.getSurname())
+            .socialTypeLogin(LoginType.INTERNAL)
+            .password(registerRequest.getPassword())
+            .locked(false)
+            .enabled(true)
+            .build();
+        Member savedMember = memberService.save(member);
+        if( savedMember != null ) {
+            return ResponseEntity.status(HttpStatus.OK).body("Successfully registered.");
+        }
+        else{
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PostMapping(value = "/login")
+    public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequest loginRequest){
+        Optional<Member> member = authService.login(loginRequest.getEmail(), loginRequest.getPassword());
+        if( member.isPresent() ){
+            return ResponseEntity.ok(Map.of("token", jwtService.generateToken(member.get())));
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
 
     @PostMapping(value = "/login/google")
     public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> requestBody){
@@ -105,7 +148,6 @@ public class MemberController {
     }
 
     @GetMapping(value = "/{memberId}")
-
     public ResponseEntity<MemberProfileResponse> getMemberById(@PathVariable Long memberId){
         log.info("getMemberById has been called with member id: {}", memberId);
         Optional<Member> member = memberService.getMemberById(memberId);
