@@ -1,5 +1,6 @@
 package com.cookingapp.cookingapp.service;
 
+import com.cookingapp.cookingapp.dto.RecipeProjection;
 import com.cookingapp.cookingapp.dto.RecipeWithLikesAndSaves;
 import com.cookingapp.cookingapp.entity.Recipe;
 
@@ -11,6 +12,10 @@ public interface RecipeService {
     Recipe save(Recipe recipe);
 
     Recipe getRecipeById(Long id);
+
+    // RecipeProjection getRecipeById2(Long id);
+
+    List<RecipeProjection> getRecipeProjection();
 
     List<Recipe> getAllRecipe();
 
@@ -27,5 +32,7 @@ public interface RecipeService {
     void chooseDailyRandomRecipe();
 
     Recipe getDailyRandomRecipe();
+
+    void scoreRecipe(Long recipeId, Double score);
 
 }

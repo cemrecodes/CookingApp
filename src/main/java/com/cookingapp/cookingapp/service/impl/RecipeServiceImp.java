@@ -1,7 +1,5 @@
 package com.cookingapp.cookingapp.service.impl;
 
-import com.cookingapp.cookingapp.dto.LoggedRecipeResponseDTO;
-import com.cookingapp.cookingapp.dto.RecipeDto;
 import com.cookingapp.cookingapp.dto.RecipeProjection;
 import com.cookingapp.cookingapp.dto.RecipeWithLikesAndSaves;
 import com.cookingapp.cookingapp.entity.Category;
@@ -34,6 +32,19 @@ public class RecipeServiceImp implements RecipeService {
     public Recipe getRecipeById(Long id) {
         return this.recipeRepository.getRecipeById(id);
     }
+
+    @Override
+    public List<RecipeProjection> getRecipeProjection() {
+        return this.recipeRepository.getAll();
+    //    return null;
+    }
+
+    // @Override
+    public RecipeProjection getRecipeById2(Long id) {
+        // return this.recipeRepository.getDtoById(id);
+        return null;
+    }
+
 
     @Override
     public List<Recipe> getAllRecipe(){
@@ -80,5 +91,11 @@ public class RecipeServiceImp implements RecipeService {
     @Override
     public Recipe getDailyRandomRecipe() {
         return dailyRandomRecipe;
+    }
+
+    @Override
+    public void scoreRecipe(Long recipeId, Double score) {
+        Double oldScore = this.getRecipeById(recipeId).getScore();
+
     }
 }

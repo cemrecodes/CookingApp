@@ -6,6 +6,7 @@ import com.cookingapp.cookingapp.model.IngredientES;
 import com.cookingapp.cookingapp.model.RecipeES;
 import com.cookingapp.cookingapp.response.RecipeHeaderResponse;
 import com.cookingapp.cookingapp.util.Util;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -36,7 +37,7 @@ import java.util.List;
 @Getter
 @Setter
 @EqualsAndHashCode(of = {"id"})
-@ToString
+// @ToString
 public class Recipe {
 
     @Id
@@ -49,7 +50,7 @@ public class Recipe {
     @Lob
     private String image;
 
-    @Column(length = 50)
+    @Column(length = 100)
     private String recipeName;
 
     @Column(length = 20)
@@ -71,6 +72,7 @@ public class Recipe {
     private Category category;
 
     @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private List<Ingredient> ingredients;
 
     @Lob
@@ -82,6 +84,9 @@ public class Recipe {
     private Double score;
 
     private boolean termsAdded;
+
+    @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Like> likes;
 
     @PrePersist
     public void prePersist() {

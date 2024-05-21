@@ -3,6 +3,7 @@ package com.cookingapp.cookingapp.controller;
 import com.cookingapp.cookingapp.dto.HeaderResponseWithDetail;
 import com.cookingapp.cookingapp.dto.IngredientDto;
 import com.cookingapp.cookingapp.dto.RecipeDto;
+import com.cookingapp.cookingapp.dto.RecipeProjection;
 import com.cookingapp.cookingapp.dto.RecipeWithLikesAndSaves;
 import com.cookingapp.cookingapp.entity.Ingredient;
 import com.cookingapp.cookingapp.entity.Member;
@@ -99,6 +100,14 @@ public class RecipeController {
         return ResponseEntity.ok(recipeList.stream().map(Recipe::toDto));
     }
 
+
+    @GetMapping("/projection")
+    public ResponseEntity getRecipeProjection(){
+        return ResponseEntity.ok(this.recipeService.getRecipeProjection());
+    }
+
+
+
     @GetMapping("/test/{memberId}")
     public ResponseEntity getAllRecipesByMemberId(@PathVariable Long memberId){
         log.info("/v1/recipes endpoint has been called");
@@ -168,6 +177,19 @@ public class RecipeController {
         }
     }
 
+    @GetMapping(value = "/test/{id}")
+    public ResponseEntity getRecipeProjection(@PathVariable Long id){
+        // log.info("/v1/recipes/{id} endpoint has been called with @PathVariable = {}" , id);
+        // RecipeProjection recipe = recipeService.getRecipeById2(id);
+        Recipe recipe = new Recipe();
+        if( recipe != null ){
+            return ResponseEntity.ok(recipe);
+        }
+        else{
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @DeleteMapping(value = "/{id}")
     public ResponseEntity deleteRecipe(@PathVariable Long id){
         log.info("DELETE /v1/recipes/{id} endpoint has been called with @PathVariable = {}" , id);
@@ -215,7 +237,7 @@ public class RecipeController {
             }
             member.ifPresent(value -> likeService.save(recipeId, value));
         }
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok().body(recipeService.getRecipeById(recipeId));
     }
     @DeleteMapping("/{recipeId}/like")
     public ResponseEntity unlikeRecipe(@PathVariable Long recipeId) {
@@ -328,6 +350,21 @@ public class RecipeController {
                     .toList();
                 Recipe recipe = recipeServiceFacade.saveRecipe(recipeDto.convertToRecipe(), ingredientList, member.get());
                 return ResponseEntity.ok(recipe.toDto());
+            }
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    @PostMapping("/{recipeId}/rate")
+    public ResponseEntity<Void> rateRecipe(@PathVariable Long recipeId, @RequestParam Double rating) {
+        log.info("rateRecipe has been called");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            String email = userDetails.getUsername();
+            Optional<Member> member = memberService.getMemberByEmail(email);
+            if( member.isPresent() ){
+                recipeService.scoreRecipe(recipeId, rating);
+                return ResponseEntity.ok().build();
             }
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

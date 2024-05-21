@@ -1,13 +1,19 @@
 package com.cookingapp.cookingapp.dto;
 
-import com.cookingapp.cookingapp.entity.Recipe;
-import lombok.Data;
+import com.cookingapp.cookingapp.entity.Ingredient;
 
-@Data
-public class RecipeProjection {
+public interface RecipeProjection {
+    Long getId();
 
-    private Recipe recipe;
-    private Boolean liked;
-    private Boolean saved;
+    String getRecipeName();
 
+    Ingredient getIngredients();
+    /*
+    IngredientProjection getIngredient();
+
+    interface IngredientProjection {
+        Long getId();
+        String getIngredient();
+    }
+     */
 }
