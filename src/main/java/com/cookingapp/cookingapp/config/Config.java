@@ -1,6 +1,11 @@
 package com.cookingapp.cookingapp.config;
 
 import com.cookingapp.cookingapp.service.GeminiInterface;
+import com.google.auth.oauth2.ServiceAccountCredentials;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
+import java.io.FileInputStream;
+import java.io.IOException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -58,6 +63,24 @@ public class Config {
   @Bean
   public ModelMapper modelMapper() {
     return new ModelMapper();
+  }
+
+  @Bean
+  public ServiceAccountCredentials serviceAccountCredentials() throws IOException {
+    String pathToJsonKey = "src/main/resources/static/cooking-app-406112-54721ffa23c4.json";
+    // Servis hesabı kimlik bilgilerini okuyun
+    ServiceAccountCredentials credentials = ServiceAccountCredentials.fromStream(
+        new FileInputStream(pathToJsonKey)
+    );
+
+    return credentials;
+  }
+
+  @Bean
+  public Storage storage() throws IOException {
+    return StorageOptions.newBuilder()
+        .setCredentials(serviceAccountCredentials())
+        .build().getService();
   }
 
 }
