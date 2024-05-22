@@ -23,8 +23,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -123,25 +121,20 @@ public class MemberController {
     public ResponseEntity<MemberProfileResponse> getMember(){
         log.info("getMember has been called");
         // todo new auth (shorter)
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication.isAuthenticated()) {
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            String email = userDetails.getUsername();
-            Optional<Member> member = memberService.getMemberByEmail(email);
-            if (member.isPresent()) {
+        Member member = authService.isAuthenticated();
+        if (member != null) {
                 MemberProfileResponse profileResponse = new MemberProfileResponse();
-                List<RecipeHeaderResponse> recipeList = recipeMemberService.getRecipesByMember(member.get())
+                List<RecipeHeaderResponse> recipeList = recipeMemberService.getRecipesByMember(member)
                     .stream()
                     .map(Recipe::toHeaderResponse)
                     .toList();
-                profileResponse.setId(member.get().getId());
-                profileResponse.setName(member.get().getName());
-                profileResponse.setSurname(member.get().getSurname());
-                profileResponse.setProfilePicUrl(member.get().getProfilePicUrl());
-                profileResponse.setEmail(member.get().getEmail());
+                profileResponse.setId(member.getId());
+                profileResponse.setName(member.getName());
+                profileResponse.setSurname(member.getSurname());
+                profileResponse.setProfilePicUrl(member.getProfilePicUrl());
+                profileResponse.setEmail(member.getEmail());
                 profileResponse.setRecipes(recipeList);
                 return ResponseEntity.ok(profileResponse);
-            }
         }
 
         return ResponseEntity.notFound().build();
