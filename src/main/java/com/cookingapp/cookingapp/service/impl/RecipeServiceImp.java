@@ -3,8 +3,8 @@ package com.cookingapp.cookingapp.service.impl;
 import com.cookingapp.cookingapp.dto.RecipeProjection;
 import com.cookingapp.cookingapp.dto.RecipeWithLikesAndSaves;
 import com.cookingapp.cookingapp.entity.Category;
+import com.cookingapp.cookingapp.entity.Member;
 import com.cookingapp.cookingapp.entity.Recipe;
-import com.cookingapp.cookingapp.repo.IRecipeResponse;
 import com.cookingapp.cookingapp.repo.RecipeRepository;
 import com.cookingapp.cookingapp.service.RecipeService;
 import java.util.Random;
@@ -51,14 +51,16 @@ public class RecipeServiceImp implements RecipeService {
         return this.recipeRepository.findAll();
     }
 
+    /*
     @Override
     public List<IRecipeResponse> getAllRecipeLoggedIn(Long memberId) {
         List<IRecipeResponse> responses = this.recipeRepository.getRecipesLoggedIn(memberId);
         return responses;
     }
+    */
 
     @Override
-    public List<RecipeWithLikesAndSaves> getAllRecipeLoggedIn2(Long memberId) {
+    public List<RecipeWithLikesAndSaves> getAllRecipeLoggedIn(Long memberId) {
         List<RecipeWithLikesAndSaves> responses = this.recipeRepository.getRecipesLoggedIn2(memberId);
         return responses;
     }
@@ -93,9 +95,4 @@ public class RecipeServiceImp implements RecipeService {
         return dailyRandomRecipe;
     }
 
-    @Override
-    public void scoreRecipe(Long recipeId, Double score) {
-        Double oldScore = this.getRecipeById(recipeId).getScore();
-
-    }
 }

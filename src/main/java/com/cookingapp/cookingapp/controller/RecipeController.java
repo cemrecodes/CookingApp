@@ -19,7 +19,6 @@ import com.cookingapp.cookingapp.service.impl.ScrapeServiceImp;
 import com.cookingapp.cookingapp.util.Util;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -78,19 +77,6 @@ public class RecipeController {
     @GetMapping
     public ResponseEntity getAllRecipes(){
         log.info("/v1/recipes endpoint has been called");
-
-        /*
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof UserDetails userDetails) {
-            String email = userDetails.getUsername();
-            Optional<Member> member = memberService.getMemberByEmail(email);
-            if(member.isPresent()){
-                return ResponseEntity.ok(this.recipeService.getAllRecipeLoggedIn(member.get().getId()));
-            }
-        }
-
-         */
-
         List<Recipe> recipeList = this.recipeService.getAllRecipe();
         return ResponseEntity.ok(recipeList.stream().map(Recipe::toDto));
     }
@@ -101,25 +87,12 @@ public class RecipeController {
         return ResponseEntity.ok(this.recipeService.getRecipeProjection());
     }
 
-
-
-    @GetMapping("/test/{memberId}")
+    @GetMapping("/testByMember/{memberId}")
     public ResponseEntity getAllRecipesByMemberId(@PathVariable Long memberId){
         log.info("/v1/recipes endpoint has been called");
+        List<RecipeWithLikesAndSaves> recipeWithLikesAndSavesList = this.recipeService.getAllRecipeLoggedIn(memberId);
 
-        /*
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof UserDetails userDetails) {
-            String email = userDetails.getUsername();
-            Optional<Member> member = memberService.getMemberByEmail(email);
-            if(member.isPresent()){
-                return ResponseEntity.ok(this.recipeService.getAllRecipeLoggedIn(member.get().getId()));
-            }
-        }
-
-         */
-        List<RecipeWithLikesAndSaves> recipeWithLikesAndSavesList = this.recipeService.getAllRecipeLoggedIn2(memberId);
-
+        // todo rating
         List<HeaderResponseWithDetail> responseList = recipeWithLikesAndSavesList.stream()
             .map(r -> new HeaderResponseWithDetail(r.getRecipe().toDto(), r.isLiked(), r.isSaved()))
             .toList();
@@ -127,6 +100,7 @@ public class RecipeController {
         return ResponseEntity.ok(responseList);
     }
 
+    // todo elastic veri (foto) güncelle
     @GetMapping(value = "/es")
     public ResponseEntity getAllRecipesES(){
         log.info("/v1/recipes/es endpoint has been called");
@@ -166,19 +140,6 @@ public class RecipeController {
         Recipe recipe = recipeService.getRecipeById(id);
         if( recipe != null ){
             return ResponseEntity.ok(recipeService.getRecipeById(id).toDto());
-        }
-        else{
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    @GetMapping(value = "/test/{id}")
-    public ResponseEntity getRecipeProjection(@PathVariable Long id){
-        // log.info("/v1/recipes/{id} endpoint has been called with @PathVariable = {}" , id);
-        // RecipeProjection recipe = recipeService.getRecipeById2(id);
-        Recipe recipe = new Recipe();
-        if( recipe != null ){
-            return ResponseEntity.ok(recipe);
         }
         else{
             return ResponseEntity.notFound().build();
@@ -310,7 +271,7 @@ public class RecipeController {
         return ResponseEntity.ok(recipeESList);
     }
 
-    // todo foto ekleme??
+    // todo foto ekleme dene
     @PostMapping
     // @PreAuthorize("isAuthenticated()")
     public ResponseEntity<RecipeDto> addRecipe(@RequestBody RecipeDto recipeDto){
@@ -331,8 +292,8 @@ public class RecipeController {
         log.info("rateRecipe has been called");
         Member member = authenticationService.isAuthenticated();
         if (member != null) {
-                recipeServiceFacade.scoreRecipe(recipeId, member, rating);
-                return ResponseEntity.ok().build();
+            recipeServiceFacade.scoreRecipe(recipeId, member, rating);
+            return ResponseEntity.ok().build();
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }

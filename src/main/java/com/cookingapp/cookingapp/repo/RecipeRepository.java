@@ -1,20 +1,25 @@
 package com.cookingapp.cookingapp.repo;
 
+import com.cookingapp.cookingapp.dto.RecipeProjection;
 import com.cookingapp.cookingapp.dto.RecipeWithLikesAndSaves;
 import com.cookingapp.cookingapp.entity.Category;
 import com.cookingapp.cookingapp.entity.Recipe;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
-
 import java.util.List;
 
 @Repository
 public interface RecipeRepository extends JpaRepository<Recipe, Long> {
 
     Recipe save(Recipe recipe);
+
     Recipe getRecipeById(Long id);
+
     List<Recipe> findAll();
+
+    @Query("SELECT r.id as id, r.recipeName as recipeName, r.ingredients as ingredients  FROM Recipe r")
+    List<RecipeProjection> getAll();
 
     List<Recipe> findByRecipeName(String name);
 
@@ -51,6 +56,5 @@ public interface RecipeRepository extends JpaRepository<Recipe, Long> {
         + "LEFT JOIN "
         + "    SavedRecipe s ON r.id = s.recipe.id AND s.member.id = :memberId ")
     List<RecipeWithLikesAndSaves> getRecipesLoggedIn2(Long memberId);
-
 
 }

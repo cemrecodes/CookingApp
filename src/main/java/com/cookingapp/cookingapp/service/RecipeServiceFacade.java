@@ -11,5 +11,6 @@ public interface RecipeServiceFacade {
 
   Recipe saveRecipe(Recipe recipe, List<Ingredient> ingredientList, Member member);
 
+  void scoreRecipe(Long recipeId, Member member, Double score);
 
 }
