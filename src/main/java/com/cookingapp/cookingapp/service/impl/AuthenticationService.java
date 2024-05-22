@@ -7,6 +7,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -28,6 +31,19 @@ public class AuthenticationService {
       return Optional.empty();
     }
     return memberService.findMemberByEmail(email);
+  }
+
+  public Member isAuthenticated() {
+    //String email = SecurityContextHolder.getContext().getAuthentication().getPrincipal() ??
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication != null && authentication.getPrincipal() instanceof UserDetails userDetails) {
+      String email = userDetails.getUsername();
+      Optional<Member> member = memberService.getMemberByEmail(email);
+      if (member.isPresent()) {
+        return member.get();
+      }
+    }
+    return null;
   }
 
 }
