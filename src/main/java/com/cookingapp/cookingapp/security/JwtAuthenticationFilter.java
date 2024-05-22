@@ -1,6 +1,6 @@
 package com.cookingapp.cookingapp.security;
 
-import com.cookingapp.cookingapp.service.impl.MemberServiceImp;
+import com.cookingapp.cookingapp.service.MemberService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,7 +20,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   private final JwtService jwtService;
 
-  private final MemberServiceImp memberService;
+  private final MemberService memberService;
 
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)

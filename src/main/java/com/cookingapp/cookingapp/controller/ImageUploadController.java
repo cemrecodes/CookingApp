@@ -1,6 +1,6 @@
 package com.cookingapp.cookingapp.controller;
 
-import com.cookingapp.cookingapp.service.impl.ImageUploadService;
+import com.cookingapp.cookingapp.service.ImageUploadService;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

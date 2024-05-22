@@ -1,17 +1,16 @@
-package com.cookingapp.cookingapp.service.impl;
+package com.cookingapp.cookingapp.service;
 
 import com.cookingapp.cookingapp.entity.Member;
 import com.cookingapp.cookingapp.entity.Recipe;
 import com.cookingapp.cookingapp.entity.Score;
 import com.cookingapp.cookingapp.repo.ScoreRepository;
-import com.cookingapp.cookingapp.service.RecipeService;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class ScoreServiceImp {
+public class ScoreService {
 
   private final ScoreRepository scoreRepository;
 

@@ -1,13 +1,12 @@
-package com.cookingapp.cookingapp.service.impl;
+package com.cookingapp.cookingapp.service;
 
-import com.cookingapp.cookingapp.service.RecipeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class ScheduledServiceImp {
+public class ScheduledService {
 
   private final RecipeService recipeService;
 

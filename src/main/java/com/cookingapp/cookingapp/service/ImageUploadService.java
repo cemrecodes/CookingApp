@@ -1,4 +1,4 @@
-package com.cookingapp.cookingapp.service.impl;
+package com.cookingapp.cookingapp.service;
 
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;

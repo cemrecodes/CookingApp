@@ -9,13 +9,13 @@ import com.cookingapp.cookingapp.entity.Member;
 import com.cookingapp.cookingapp.entity.Recipe;
 import com.cookingapp.cookingapp.model.RecipeES;
 import com.cookingapp.cookingapp.response.RecipeHeaderResponse;
+import com.cookingapp.cookingapp.service.AuthenticationService;
 import com.cookingapp.cookingapp.service.LikeService;
 import com.cookingapp.cookingapp.service.RecipeESService;
 import com.cookingapp.cookingapp.service.RecipeService;
 import com.cookingapp.cookingapp.service.RecipeServiceFacade;
 import com.cookingapp.cookingapp.service.SavedRecipeService;
-import com.cookingapp.cookingapp.service.impl.AuthenticationService;
-import com.cookingapp.cookingapp.service.impl.ScrapeServiceImp;
+import com.cookingapp.cookingapp.service.ScrapeService;
 import com.cookingapp.cookingapp.util.Util;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,7 +40,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RecipeController {
 
-    private final ScrapeServiceImp scrapeServiceImp;
+    private final ScrapeService scrapeService;
 
     private final RecipeService recipeService;
 
@@ -66,7 +66,7 @@ public class RecipeController {
 
         foodName = Util.removeSpaces(foodName);
         foodName = Util.turkishCharsToEnglish(foodName);
-        Recipe recipe = this.scrapeServiceImp.scrapeAndCreateNewRecipe(foodName);
+        Recipe recipe = this.scrapeService.scrapeAndCreateNewRecipe(foodName);
         if (recipe != null) {
             return ResponseEntity.ok(Collections.singletonList(recipe.toHeaderResponse()));
         } else {

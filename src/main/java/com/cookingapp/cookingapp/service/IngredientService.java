@@ -1,15 +1,32 @@
 package com.cookingapp.cookingapp.service;
 
 import com.cookingapp.cookingapp.entity.Ingredient;
+import com.cookingapp.cookingapp.repo.IngredientRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-public interface IngredientService {
+@Service
+@RequiredArgsConstructor
+public class IngredientService {
 
-    Ingredient save(Ingredient ingredient);
+    private final IngredientRepository ingredientRepository;
 
-    List<Ingredient> getIngredientsByRecipeId(Long id);
+    
+    public Ingredient save(Ingredient ingredient) {
+        return ingredientRepository.save(ingredient);
+    }
 
-    List<Ingredient> saveAll(List<Ingredient> ingredientList);
+    
+    public List<Ingredient> getIngredientsByRecipeId(Long id) {
+        return ingredientRepository.getByRecipeId(id);
+    }
+
+    
+    public List<Ingredient> saveAll(List<Ingredient> ingredientList) {
+        ingredientRepository.saveAll(ingredientList);
+      return ingredientList;
+    }
 
 }

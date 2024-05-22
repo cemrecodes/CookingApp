@@ -11,11 +11,10 @@ import com.cookingapp.cookingapp.entity.Member;
 import com.cookingapp.cookingapp.entity.Recipe;
 import com.cookingapp.cookingapp.response.MemberProfileResponse;
 import com.cookingapp.cookingapp.response.RecipeHeaderResponse;
+import com.cookingapp.cookingapp.service.AuthenticationService;
 import com.cookingapp.cookingapp.service.GoogleService;
 import com.cookingapp.cookingapp.service.MemberService;
 import com.cookingapp.cookingapp.service.RecipeMemberService;
-import com.cookingapp.cookingapp.service.impl.AuthenticationService;
-import com.cookingapp.cookingapp.service.impl.MemberServiceImp;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import java.util.Map;
 import java.util.Optional;
@@ -41,7 +40,7 @@ public class MemberController {
 
     private final MemberService memberService;
 
-    private final MemberServiceImp memberServiceImp;
+    private final MemberService memberServiceImp;
 
     private final RecipeMemberService recipeMemberService;
 

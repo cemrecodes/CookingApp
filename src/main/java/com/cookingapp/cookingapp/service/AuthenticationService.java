@@ -1,7 +1,6 @@
-package com.cookingapp.cookingapp.service.impl;
+package com.cookingapp.cookingapp.service;
 
 import com.cookingapp.cookingapp.entity.Member;
-import com.cookingapp.cookingapp.service.MemberService;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;

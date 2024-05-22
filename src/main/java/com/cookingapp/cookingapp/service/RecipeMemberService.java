@@ -3,16 +3,39 @@ package com.cookingapp.cookingapp.service;
 import com.cookingapp.cookingapp.entity.Member;
 import com.cookingapp.cookingapp.entity.Recipe;
 import com.cookingapp.cookingapp.entity.RecipeMember;
+import com.cookingapp.cookingapp.repo.RecipeMemberRepository;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
-public interface RecipeMemberService {
+@Service
+@Slf4j
+@RequiredArgsConstructor
+public class RecipeMemberService {
 
-  RecipeMember save(Recipe recipe, Member member);
+  private final RecipeMemberRepository recipeMemberRepository;
 
-  void delete(Recipe recipe);
+  
+  public RecipeMember save(Recipe recipe, Member member) {
+    RecipeMember recipeMember = new RecipeMember();
+    recipeMember.setRecipe(recipe);
+    recipeMember.setMember(member);
+    return recipeMemberRepository.save(recipeMember);
+  }
 
-  List<Recipe> getRecipesByMember(Member member);
+  
+  public void delete(Recipe recipe) {
+    recipeMemberRepository.deleteRecipeMemberByRecipe(recipe);
+  }
 
-  List<Recipe> getRecipesByMemberId(Long memberId);
+  
+  public List<Recipe> getRecipesByMember(Member member) {
+    return recipeMemberRepository.getRecipesByMember(member);
+  }
 
+  
+  public List<Recipe> getRecipesByMemberId(Long memberId) {
+    return recipeMemberRepository.getRecipesByMemberId(memberId);
+  }
 }

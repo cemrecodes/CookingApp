@@ -1,19 +1,52 @@
 package com.cookingapp.cookingapp.service;
 
+
 import com.cookingapp.cookingapp.entity.Like;
 import com.cookingapp.cookingapp.entity.Member;
 import com.cookingapp.cookingapp.entity.Recipe;
+import com.cookingapp.cookingapp.repo.LikeRepository;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
-public interface LikeService {
+@Service
+@RequiredArgsConstructor
+public class LikeService {
 
-  Like save(Long recipeId, Member member);
+    private final LikeRepository likeRepository;
 
-  void delete(Long recipeId, Member member);
+    private final RecipeService recipeService;
 
-  Like findLikeByRecipeAndMember(Recipe recipe, Member member);
+    
+    public Like save(Long recipeId, Member member) {
+        Recipe recipe = recipeService.getRecipeById(recipeId);
+        Like like = new Like();
+        like.setRecipe(recipe);
+        like.setMember(member);
+        return likeRepository.save(like);
+    }
 
-  Like findLikeByRecipeAndMember(Long recipeId, Member member);
+    
+    public void delete(Long recipeId, Member member) {
+        Recipe recipe = recipeService.getRecipeById(recipeId);
+        Like like = findLikeByRecipeAndMember(recipe, member);
+        likeRepository.delete(like);
+    }
 
-  List<Recipe> getLikedRecipesByMember(Member member);
+    
+    public Like findLikeByRecipeAndMember(Recipe recipe, Member member) {
+        return likeRepository.findByRecipeAndMember(recipe, member);
+    }
+
+    
+    public Like findLikeByRecipeAndMember(Long recipeId, Member member) {
+        Recipe recipe = recipeService.getRecipeById(recipeId);
+        return likeRepository.findByRecipeAndMember(recipe, member);
+    }
+
+    
+    public List<Recipe> getLikedRecipesByMember(Member member) {
+        return likeRepository.getLikedRecipesByMember(member);
+    }
+
 }
