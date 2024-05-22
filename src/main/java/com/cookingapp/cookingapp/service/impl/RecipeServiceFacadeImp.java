@@ -7,7 +7,6 @@ import com.cookingapp.cookingapp.entity.Ingredient;
 import com.cookingapp.cookingapp.entity.Member;
 import com.cookingapp.cookingapp.entity.Recipe;
 import com.cookingapp.cookingapp.entity.Score;
-import com.cookingapp.cookingapp.service.ChatGptService;
 import com.cookingapp.cookingapp.service.GeminiService;
 import com.cookingapp.cookingapp.service.IngredientService;
 import com.cookingapp.cookingapp.service.RecipeESService;
@@ -28,19 +27,11 @@ import org.springframework.stereotype.Service;
 public class RecipeServiceFacadeImp implements RecipeServiceFacade {
 
   private final RecipeService recipeService;
-
   private final IngredientService ingredientService;
-
   private final RecipeESService recipeESService;
-
   private final RecipeMemberService recipeMemberService;
-
-  private final ChatGptService chatGptService;
-
   private final GeminiService geminiService;
-
   private final ImageUploadService imageUploadService;
-
   private final ScoreServiceImp scoreService;
 
   @Override
@@ -103,13 +94,13 @@ public class RecipeServiceFacadeImp implements RecipeServiceFacade {
     }
 
     recipeService.save(recipe);
+    recipeESService.save(recipe.toRecipeES());
   }
 
 
   /* gets difficulty and category of recipe from ai */
   private Map<String, Object> getDifficultyAndCategory(RecipeDto recipe) {
     String aiResponse = geminiService.getDifficultyLevelAndCategory(recipe);
-        // this.chatGptService.getDifficultyLevelAndCategory(recipe);
     return Util.convertJsonToMap(aiResponse);
   }
 
