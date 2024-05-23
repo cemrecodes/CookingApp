@@ -82,7 +82,7 @@ public class RecipeController {
     }
 
 
-    @GetMapping("/projection")
+    @GetMapping("/test/projection")
     public ResponseEntity getRecipeProjection(){
         return ResponseEntity.ok(this.recipeService.getRecipeProjection());
     }
@@ -101,7 +101,7 @@ public class RecipeController {
     }
 
     // todo elastic veri (foto) güncelle
-    @GetMapping(value = "/es")
+    @GetMapping(value = "/test/es")
     public ResponseEntity getAllRecipesES(){
         log.info("/v1/recipes/es endpoint has been called");
         List<RecipeES> recipeList = this.recipeESService.getAll();
@@ -159,7 +159,7 @@ public class RecipeController {
         }
     }
 
-    @DeleteMapping(value = "/es/{id}")
+    @DeleteMapping(value = "/test/es/{id}")
     public ResponseEntity deleteRecipeES(@PathVariable Long id){
         log.info("DELETE /v1/recipes/es/{id} endpoint has been called with @PathVariable = {}" , id);
         this.recipeESService.delete(id);
@@ -255,12 +255,12 @@ public class RecipeController {
         return ResponseEntity.notFound().build();
     }
 
-    @GetMapping(value = "/deleteAll")
+    @GetMapping(value = "/test/deleteAll")
     public ResponseEntity deleteAllElastic(){
         recipeESService.deleteAll();
         return ResponseEntity.ok().build();
     }
-    @GetMapping(value = "/addToElastic")
+    @GetMapping(value = "/test/addToElastic")
     public ResponseEntity<List<RecipeES>> addRecipesToElastic(){
         List<Recipe> recipeList = recipeService.getAllRecipe();
         List<RecipeES> recipeESList = new ArrayList<>();
