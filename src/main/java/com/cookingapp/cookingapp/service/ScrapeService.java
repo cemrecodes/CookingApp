@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class ScrapeService{
+public class ScrapeService {
 
     private final RecipeService recipeService;
 
