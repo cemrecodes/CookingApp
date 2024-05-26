@@ -5,9 +5,11 @@ import com.cookingapp.cookingapp.dto.ChatGptResponse;
 import com.cookingapp.cookingapp.service.GeminiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
@@ -39,4 +41,9 @@ public class AIController {
         //return geminiService.chatDiscussion(prompt);
     }
 
+    @PostMapping("/upload")
+    public ResponseEntity<String> uploadImage(@RequestParam("url") String imageUrl) {
+        String explanation =geminiService.getCompletionWithImage("resim", imageUrl);
+        return ResponseEntity.ok(explanation);
+    }
 }
