@@ -13,7 +13,7 @@ public class RecipeHeaderResponse {
   private String servesFor;
   private String difficultyLevel;
   private String category;
-  private Double score;
   private Long likeCount;
+  private boolean liked;
 
 }

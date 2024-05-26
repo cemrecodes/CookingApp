@@ -54,7 +54,7 @@ public class ChatGptService {
         messages.add(systemMessage);
         messages.add(exampleUserMessage);
         messages.add(exampleAssistantMessage);
-        messages.add(new Message("user", recipe.toStringForChatGpt()) );
+        messages.add(new Message("user", recipe.toStringForAI()) );
         ChatGptRequest request = new ChatGptRequest(model, messages);
         ChatGptResponse chatGptResponse = chatGptTemplate.postForObject(apiUrl, request, ChatGptResponse.class);
         return chatGptResponse.getChoices().get(0).getMessage().getContent();
@@ -82,7 +82,7 @@ public class ChatGptService {
         messages.add(systemMessage);
         messages.add(exampleUserMessage);
         messages.add(exampleAssistantMessage);
-        messages.add(new Message("user", "Tarif: " + recipe.toStringForChatGpt()) );
+        messages.add(new Message("user", "Tarif: " + recipe.toStringForAI()) );
         ChatGptRequest request = new ChatGptRequest(model, messages);
         ChatGptResponse chatGptResponse = chatGptTemplate.postForObject(apiUrl, request, ChatGptResponse.class);
         return chatGptResponse.getChoices().get(0).getMessage().getContent();
@@ -113,7 +113,7 @@ public class ChatGptService {
         messages.add(systemMessage);
         messages.add(exampleUserMessage);
         messages.add(exampleAssistantMessage);
-        messages.add(new Message("user", recipe.toStringForChatGpt()) );
+        messages.add(new Message("user", recipe.toStringForAI()) );
         ChatGptRequest request = new ChatGptRequest(model, messages);
         ChatGptResponse chatGptResponse = chatGptTemplate.postForObject(apiUrl, request, ChatGptResponse.class);
         return chatGptResponse.getChoices().get(0).getMessage().getContent();

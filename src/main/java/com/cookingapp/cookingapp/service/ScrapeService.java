@@ -52,7 +52,7 @@ public class ScrapeService {
             return null;
         }
         // append endpoint to base url and scrape the recipe
-        HashMap<String, Object> recipeStr = this.scrapeUrl("https://www.yemek.com", permaLink);
+        Map<String, Object> recipeStr = this.scrapeUrl("https://www.yemek.com", permaLink);
         // convert recipe hashmap to dto
         RecipeDto recipeDto = this.getRecipe(recipeStr);
         /*
@@ -104,7 +104,7 @@ public class ScrapeService {
 
     /* returns recipe by scraping */
     
-    public HashMap<String, Object> scrapeUrl(String url, String permaLink) {
+    public Map<String, Object> scrapeUrl(String url, String permaLink) {
         StringBuilder fullUrl = new StringBuilder(url);
         fullUrl.append(permaLink);
         HashMap<String, Object> result = new HashMap<>();
@@ -137,7 +137,7 @@ public class ScrapeService {
 
     /* returns RecipeDto converted from recipe hashmap */
     
-    public RecipeDto getRecipe(HashMap<String, Object> recipeMap) {
+    public RecipeDto getRecipe(Map<String, Object> recipeMap) {
         Map<String, Object> mappedScript = Util.convertJsonToMap((String) recipeMap.get("recipe"));
 
         RecipeDto recipeDto = new RecipeDto();

@@ -60,7 +60,6 @@ public class RecipeES {
     RecipeDto recipeDto = new RecipeDto();
     recipeDto.setId(id);
     recipeDto.setImageUrl(imageUrl);
-    recipeDto.setImage(image);
     recipeDto.setRecipeName(recipeName);
     recipeDto.setCookingTime(cookingTime);
     recipeDto.setPreparationTime(preparationTime);

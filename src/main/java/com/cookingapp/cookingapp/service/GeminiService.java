@@ -74,7 +74,7 @@ public class GeminiService {
     String message = "Aşağıdaki yemek tarifinin zorluk derecesini (kolay,orta,zor) ve kategorisini (çorba, ana yemek, tatlı, içecek) belirle." +
         "Cevabı dictionary şeklinde {} içinde yolla, zorluk derecesi key'i \"difficulty\", kategori keyi ise \"category\" olsun.";
 
-    String sb = message + recipe.toStringForChatGpt();
+    String sb = message + recipe.toStringForAI();
     GeminiResponse response = getCompletion(new GeminiRequest(
         List.of(new Content(List.of(new TextPart(sb))))));
     return response.candidates().get(0).content().parts().get(0).text();

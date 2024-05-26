@@ -13,8 +13,9 @@ import java.util.ArrayList;
 public class RecipeDto {
 
     private Long id;
+    private Long memberId;
+    private String memberName;
     private String imageUrl;
-    private String image;
     private String recipeName;
     private String cookingTime;
     private String preparationTime;
@@ -26,8 +27,10 @@ public class RecipeDto {
     private ArrayList<InstructionDto> instructions;
     private OffsetDateTime createTime;
     private Long likeCount;
+    private boolean liked;
+    private boolean saved;
 
-    public String toStringForChatGpt(){
+    public String toStringForAI(){
         StringBuilder specialStringBuilder = new StringBuilder();
         for (InstructionDto instructionDto : instructions) {
             specialStringBuilder.append(instructionDto.getInstruction()).append(". ");
@@ -40,7 +43,6 @@ public class RecipeDto {
     public Recipe convertToRecipe(){
         Recipe recipe = new Recipe();
         recipe.setImageUrl(imageUrl);
-        recipe.setImage(image);
         recipe.setRecipeName(recipeName);
         recipe.setCookingTime(cookingTime);
         recipe.setPreparationTime(preparationTime);

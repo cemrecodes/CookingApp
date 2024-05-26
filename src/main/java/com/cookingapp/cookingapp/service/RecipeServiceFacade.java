@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 public class RecipeServiceFacade {
 
   private final RecipeService recipeService;
+  private final MemberService memberService;
   private final IngredientService ingredientService;
   private final RecipeESService recipeESService;
   private final RecipeMemberService recipeMemberService;
@@ -29,6 +31,8 @@ public class RecipeServiceFacade {
   
   public Recipe saveRecipe(Recipe recipe, List<Ingredient> ingredientList) {
     setDifficultyAndCategory(recipe);
+    Optional<Member> member = memberService.getMemberById(0L);
+    recipe.setMember(member.get());
     recipe.setLikeCount(0L);
     recipe.setCreateDate(LocalDateTime.now());
     recipe.setTotalTime(Util.getTotalTime(recipe.getCookingTime(), recipe.getPreparationTime()));
@@ -53,7 +57,7 @@ public class RecipeServiceFacade {
     recipe.setCreateDate(LocalDateTime.now());
     recipe.setTotalTime(Util.getTotalTime(recipe.getCookingTime(), recipe.getPreparationTime()));
     Recipe finalRecipe = recipeService.save(recipe);
-    byte[] imageBytes = Base64.getDecoder().decode(finalRecipe.getImage());
+    byte[] imageBytes = Base64.getDecoder().decode(finalRecipe.getImageUrl());
     String imageUrl = imageUploadService.uploadImage(finalRecipe.getId(), imageBytes);
     finalRecipe.setImageUrl(imageUrl);
     List<Ingredient> list = new ArrayList<>();

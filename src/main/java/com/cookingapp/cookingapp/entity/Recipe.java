@@ -15,9 +15,10 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -44,11 +45,12 @@ public class Recipe {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne( cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id")
+    private Member member;
+
     @Column(length = 200)
     private String imageUrl;
-
-    @Lob
-    private String image;
 
     @Column(length = 100)
     private String recipeName;
@@ -84,13 +86,10 @@ public class Recipe {
     @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Like> likes;
 
-    private Long likeCount;
+    @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<SavedRecipe> saves;
 
-    @PrePersist
-    public void prePersist() {
-        this.createDate = LocalDateTime.now();
-        this.totalTime = Util.getTotalTime(this.cookingTime, this.preparationTime);
-    }
+    private Long likeCount;
 
     public RecipeDto toDto(){
         RecipeDto recipeDto = new RecipeDto();
@@ -101,6 +100,8 @@ public class Recipe {
         recipeDto.setPreparationTime(preparationTime);
         recipeDto.setTotalTime(totalTime);
         recipeDto.setServesFor(servesFor);
+        recipeDto.setMemberId(member != null ? member.getId() : null);
+        recipeDto.setMemberName(member != null ? member.getName() : null);
         recipeDto.setDifficultyLevel(difficultyLevel != null ? DifficultyLevel.toString(difficultyLevel) : null);
         recipeDto.setCategory(category != null ? Category.toString(category) : null);
         if( ingredients != null ) {
@@ -114,6 +115,8 @@ public class Recipe {
         }
         recipeDto.setInstructions(this.convertInstructions());
         recipeDto.setLikeCount(likeCount);
+        recipeDto.setLiked(false);
+        recipeDto.setSaved(false);
         return recipeDto;
     }
 
@@ -121,13 +124,13 @@ public class Recipe {
         RecipeHeaderResponse response = new RecipeHeaderResponse();
         response.setId(id);
         response.setImageUrl(imageUrl);
-        response.setImage(image);
         response.setRecipeName(recipeName);
         response.setTotalTime(totalTime);
         response.setServesFor(servesFor);
         response.setDifficultyLevel(DifficultyLevel.toString(difficultyLevel));
         response.setCategory( Category.toString(category));
         response.setLikeCount(likeCount);
+        response.setLiked(false);
         return response;
     }
 
@@ -151,7 +154,6 @@ public class Recipe {
         RecipeES recipeES = new RecipeES();
         recipeES.setId(id);
         recipeES.setImageUrl(imageUrl);
-        recipeES.setImage(image);
         recipeES.setRecipeName(recipeName);
         recipeES.setCookingTime(cookingTime);
         recipeES.setPreparationTime(preparationTime);

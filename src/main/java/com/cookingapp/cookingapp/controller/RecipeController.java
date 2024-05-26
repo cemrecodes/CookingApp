@@ -12,6 +12,7 @@ import com.cookingapp.cookingapp.model.RecipeES;
 import com.cookingapp.cookingapp.response.RecipeHeaderResponse;
 import com.cookingapp.cookingapp.service.AuthenticationService;
 import com.cookingapp.cookingapp.service.LikeService;
+import com.cookingapp.cookingapp.service.MemberService;
 import com.cookingapp.cookingapp.service.RecipeESService;
 import com.cookingapp.cookingapp.service.RecipeService;
 import com.cookingapp.cookingapp.service.RecipeServiceFacade;
@@ -20,6 +21,7 @@ import com.cookingapp.cookingapp.service.ScrapeService;
 import com.cookingapp.cookingapp.util.Util;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -59,26 +61,51 @@ public class RecipeController {
     public ResponseEntity<List<RecipeHeaderResponse>> scrapeAndCreateNewFoodRecipe(@RequestParam(required = false) String category, @RequestParam(required = true) String foodName){
         log.info("/v1/recipes/search endpoint has been called with @RequestParam foodName = {} , category = {}" , foodName, category);
 
+        switch (category){
+            case "corba": {
+                category = "çorba";
+                break;
+            }
+            case "ana-yemek": {
+                category = "ana yemek";
+                break;
+            }
+            case "tatli": {
+                category = "tatlı";
+                break;
+            }
+            case "icecek": {
+                category = "içecek";
+                break;
+            }
+            default:
+                category = null;
+        }
+
         List<RecipeHeaderResponse> foundRecipe = new ArrayList<>(
             recipeESService.searchRecipe(foodName).stream().map(RecipeES::toHeaderResponse).toList());
 
-        if (category != null ) {
-            foundRecipe.removeIf(recipe -> !recipe.getCategory().equals(category));
-        }
-
-        if (!foundRecipe.isEmpty() ) {
-            return ResponseEntity.ok(foundRecipe);
+        if ( !foundRecipe.isEmpty() ) {
+            if ( category != null ) {
+                String finalCategory = category;
+                foundRecipe.removeIf(recipe -> !recipe.getCategory().equals(finalCategory));
+            }
+            // todo scrapeledi ama uygun değil / bulamadı -> not found
+          return ResponseEntity.ok(foundRecipe);
         }
 
         foodName = Util.removeSpaces(foodName);
         foodName = Util.turkishCharsToEnglish(foodName);
         Recipe recipe = this.scrapeService.scrapeAndCreateNewRecipe(foodName);
-        if (recipe != null && !recipe.getCategory().toString().equals(category)) {
-          return ResponseEntity.ok().build();
+        if (recipe != null){
+            if( category != null && !recipe.getCategory().toString().equals(category)) {
+                return ResponseEntity.ok().build();
+            }
+            else{
+                return ResponseEntity.ok(Collections.singletonList(recipe.toHeaderResponse()));
+            }
         }
-        if (recipe != null) {
-            return ResponseEntity.ok(Collections.singletonList(recipe.toHeaderResponse()));
-        } else {
+        else {
             return ResponseEntity.badRequest().build();
         }
     }
@@ -318,4 +345,5 @@ public class RecipeController {
         instructionExplanation.setExplanation(explanation);
         return ResponseEntity.ok(instructionExplanation);
     }
+
 }
