@@ -55,9 +55,6 @@ public class ScrapeService {
         HashMap<String, Object> recipeStr = this.scrapeUrl("https://www.yemek.com", permaLink);
         // convert recipe hashmap to dto
         RecipeDto recipeDto = this.getRecipe(recipeStr);
-        if(recipeDto.getScore() == null){
-            recipeDto.setScore(0.0);
-        }
         /*
         // convert recipe dto to recipe and save
         Recipe recipe = this.recipeService.save(recipeDto.convertToRecipe());
@@ -75,8 +72,6 @@ public class ScrapeService {
         // add id to recipedto for response
         recipeDto.setId(recipe.getId());
          */
-
-        //  ImageServiceImp.downloadImage(recipeDto.getImageUrl());
 
         return recipeServiceFacade.saveRecipe(recipeDto.convertToRecipe(), ingredients);
     }

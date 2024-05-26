@@ -81,19 +81,14 @@ public class Recipe {
     @Column(columnDefinition = "TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createDate;
 
-    private Double score;
-
-    private boolean termsAdded;
-
     @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Like> likes;
+
+    private Long likeCount;
 
     @PrePersist
     public void prePersist() {
         this.createDate = LocalDateTime.now();
-        if(score == null){
-            this.score = 0.0;
-        }
         this.totalTime = Util.getTotalTime(this.cookingTime, this.preparationTime);
     }
 
@@ -118,7 +113,7 @@ public class Recipe {
             recipeDto.setIngredients(null);
         }
         recipeDto.setInstructions(this.convertInstructions());
-        recipeDto.setScore(score);
+        recipeDto.setLikeCount(likeCount);
         return recipeDto;
     }
 
@@ -132,7 +127,7 @@ public class Recipe {
         response.setServesFor(servesFor);
         response.setDifficultyLevel(DifficultyLevel.toString(difficultyLevel));
         response.setCategory( Category.toString(category));
-        response.setScore(score);
+        response.setLikeCount(likeCount);
         return response;
     }
 
@@ -168,8 +163,7 @@ public class Recipe {
             ingredientESList.add(ingredient.toIngredientES());
         }
         recipeES.setIngredients(ingredientESList);
-        recipeES.setScore(score);
-        recipeES.setTermsAdded(termsAdded);
+        recipeES.setLikeCount(likeCount);
         return recipeES;
     }
 

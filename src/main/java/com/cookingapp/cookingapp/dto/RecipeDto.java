@@ -7,8 +7,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -27,8 +25,7 @@ public class RecipeDto {
     private ArrayList<IngredientDto> ingredients;
     private ArrayList<InstructionDto> instructions;
     private OffsetDateTime createTime;
-    private HashMap<Integer, ArrayList<String>> terms;
-    private Double score;
+    private Long likeCount;
 
     public String toStringForChatGpt(){
         StringBuilder specialStringBuilder = new StringBuilder();
@@ -52,8 +49,7 @@ public class RecipeDto {
         recipe.setCategory(category != null ? Category.convert(category) : null);
         // recipe.setIngredients(createIngredientsString(ingredients));
         recipe.setInstructions(createInstructionsString(instructions));
-        recipe.setTermsAdded(false);
-        recipe.setScore(score);
+        recipe.setLikeCount(likeCount);
         return recipe;
     }
 

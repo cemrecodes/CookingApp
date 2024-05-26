@@ -1,9 +1,7 @@
 package com.cookingapp.cookingapp.model;
 
 import com.cookingapp.cookingapp.dto.RecipeDto;
-import com.cookingapp.cookingapp.entity.Category;
 import com.cookingapp.cookingapp.entity.DifficultyLevel;
-import com.cookingapp.cookingapp.entity.Recipe;
 import com.cookingapp.cookingapp.response.RecipeHeaderResponse;
 import com.cookingapp.cookingapp.util.Util;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -55,11 +53,7 @@ public class RecipeES {
 
   private List<IngredientES> ingredients;
 
-  @Field(type = FieldType.Double)
-  private Double score;
-
-  @Field(type = FieldType.Boolean)
-  private boolean termsAdded;
+  private Long likeCount;
 
 
   public RecipeDto toDto(){
@@ -74,8 +68,7 @@ public class RecipeES {
     recipeDto.setServesFor(servesFor);
     recipeDto.setDifficultyLevel(difficultyLevel);
     recipeDto.setCategory(category);
-    recipeDto.setScore(score);
-
+    recipeDto.setLikeCount(likeCount);
     return recipeDto;
   }
 
@@ -89,7 +82,7 @@ public class RecipeES {
     response.setServesFor(servesFor);
     response.setDifficultyLevel(Util.translateDifficultyLevelToTurkish(DifficultyLevel.valueOf(difficultyLevel)));
     response.setCategory(Util.translateCategoryToTurkish(category));
-    response.setScore(score);
+    response.setLikeCount(likeCount);
     return response;
   }
 }

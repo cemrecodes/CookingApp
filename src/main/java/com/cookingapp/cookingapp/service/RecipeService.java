@@ -1,5 +1,7 @@
 package com.cookingapp.cookingapp.service;
 
+import com.cookingapp.cookingapp.dto.InstructionDto;
+import com.cookingapp.cookingapp.dto.RecipeDto;
 import com.cookingapp.cookingapp.dto.RecipeProjection;
 import com.cookingapp.cookingapp.dto.RecipeWithLikesAndSaves;
 import com.cookingapp.cookingapp.entity.Category;
@@ -19,6 +21,8 @@ public class RecipeService {
     private final RecipeRepository recipeRepository;
     private Recipe dailyRandomRecipe;
     // todo make this bean
+
+    private final GeminiService geminiService;
     private final Random random = new Random();
 
     
@@ -91,6 +95,30 @@ public class RecipeService {
     
     public Recipe getDailyRandomRecipe() {
         return dailyRandomRecipe;
+    }
+
+    public String explainInstruction(Long recipeId, Long instructionIndex) {
+        RecipeDto recipe = this.recipeRepository.getRecipeById(recipeId).toDto();
+        int i = 0;
+        String explanation = "";
+        List<InstructionDto> instructions = recipe.getInstructions();
+        for(InstructionDto instruction : instructions){
+            if(i == instructionIndex.intValue()){
+                explanation = this.geminiService.explainInstruction(instruction.getInstruction());
+                break;
+            }
+            i++;
+        }
+        explanation = explanation.replace("\n", " ");
+        explanation = explanation.replace("**", "");
+        return explanation;
+    }
+
+    public String explainInstruction(String instruction) {
+        String explanation = this.geminiService.explainInstruction(instruction);
+        explanation = explanation.replace("\n", " ");
+        explanation = explanation.replace("*", "");
+        return explanation;
     }
 
 }

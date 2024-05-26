@@ -73,6 +73,26 @@ public class RecipeESService {
     return extractItemsFromResponse(response);
   }
 
+  public List<RecipeES> searchRecipe(String recipeName, String category){
+    SearchResponse<RecipeES> response = null;
+    try {
+      Supplier<Query> querySupplier;
+      if (category != null) {
+        querySupplier = ESUtil.buildBoolQueryForFieldAndValue("recipeName", recipeName, "category", category, true);
+      } else {
+        querySupplier = ESUtil.buildQueryForFieldAndValue("recipeName", recipeName, true);
+      }
+
+      response = elasticsearchClient.search(q -> q.index("recipes")
+          .query(querySupplier.get()), RecipeES.class);
+
+      // log.info("Elasticsearch response: {}", response.toString());
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    return extractItemsFromResponse(response);
+  }
+
   public List<RecipeES> extractItemsFromResponse(SearchResponse<RecipeES> response){
     return response
         .hits()

@@ -2,6 +2,7 @@ package com.cookingapp.cookingapp.controller;
 
 import com.cookingapp.cookingapp.dto.HeaderResponseWithDetail;
 import com.cookingapp.cookingapp.dto.IngredientDto;
+import com.cookingapp.cookingapp.dto.InstructionExplanation;
 import com.cookingapp.cookingapp.dto.RecipeDto;
 import com.cookingapp.cookingapp.dto.RecipeWithLikesAndSaves;
 import com.cookingapp.cookingapp.entity.Ingredient;
@@ -55,18 +56,26 @@ public class RecipeController {
     private final AuthenticationService authenticationService;
 
     @GetMapping(value = "/search")
-    public ResponseEntity<List<RecipeHeaderResponse>> scrapeAndCreateNewFoodRecipe(@RequestParam(required = true) String foodName){
-        log.info("/v1/recipes/search endpoint has been called with @RequestParam = {}" , foodName);
+    public ResponseEntity<List<RecipeHeaderResponse>> scrapeAndCreateNewFoodRecipe(@RequestParam(required = false) String category, @RequestParam(required = true) String foodName){
+        log.info("/v1/recipes/search endpoint has been called with @RequestParam foodName = {} , category = {}" , foodName, category);
 
-        List<RecipeHeaderResponse> foundRecipe = recipeESService.searchRecipe(foodName).stream().map(RecipeES::toHeaderResponse).toList();
+        List<RecipeHeaderResponse> foundRecipe = new ArrayList<>(
+            recipeESService.searchRecipe(foodName).stream().map(RecipeES::toHeaderResponse).toList());
 
-        if (!foundRecipe.isEmpty()) {
+        if (category != null ) {
+            foundRecipe.removeIf(recipe -> !recipe.getCategory().equals(category));
+        }
+
+        if (!foundRecipe.isEmpty() ) {
             return ResponseEntity.ok(foundRecipe);
         }
 
         foodName = Util.removeSpaces(foodName);
         foodName = Util.turkishCharsToEnglish(foodName);
         Recipe recipe = this.scrapeService.scrapeAndCreateNewRecipe(foodName);
+        if (recipe != null && !recipe.getCategory().toString().equals(category)) {
+          return ResponseEntity.ok().build();
+        }
         if (recipe != null) {
             return ResponseEntity.ok(Collections.singletonList(recipe.toHeaderResponse()));
         } else {
@@ -286,15 +295,27 @@ public class RecipeController {
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
-
-    @PostMapping("/{recipeId}/rate")
-    public ResponseEntity<Void> rateRecipe(@PathVariable Long recipeId, @RequestParam Double rating) {
-        log.info("rateRecipe has been called");
+    @GetMapping("/{recipeId}/instructions/{instructionIndex}/details")
+    public ResponseEntity explainInstruction(@PathVariable Long recipeId, @RequestParam Long instructionIndex) {
+        log.info("explainInstruction has been called");
+        // todo sadece giriş yapanlara özel mi olmalı
+        /*
         Member member = authenticationService.isAuthenticated();
-        if (member != null) {
-            recipeServiceFacade.scoreRecipe(recipeId, member, rating);
-            return ResponseEntity.ok().build();
-        }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (member != null) { */
+            String explanation = recipeService.explainInstruction(recipeId, instructionIndex);
+            InstructionExplanation instructionExplanation = new InstructionExplanation();
+            instructionExplanation.setExplanation(explanation);
+            return ResponseEntity.ok(instructionExplanation);
+        /* }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); */
+    }
+
+    @GetMapping("/instructionDetail")
+    public ResponseEntity<InstructionExplanation> explain(@RequestParam String instruction) {
+        log.info("explainInstruction has been called");
+        String explanation = recipeService.explainInstruction(instruction);
+        InstructionExplanation instructionExplanation = new InstructionExplanation();
+        instructionExplanation.setExplanation(explanation);
+        return ResponseEntity.ok(instructionExplanation);
     }
 }

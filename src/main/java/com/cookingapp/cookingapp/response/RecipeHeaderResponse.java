@@ -14,5 +14,6 @@ public class RecipeHeaderResponse {
   private String difficultyLevel;
   private String category;
   private Double score;
+  private Long likeCount;
 
 }
