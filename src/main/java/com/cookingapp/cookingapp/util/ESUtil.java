@@ -2,15 +2,10 @@ package com.cookingapp.cookingapp.util;
 
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery.Builder;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.TermQuery;
-import co.elastic.clients.util.ObjectBuilder;
-import java.util.Map;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import lombok.experimental.UtilityClass;
-import org.springframework.data.elasticsearch.client.elc.Queries;
 
 @UtilityClass
 public class ESUtil {
@@ -66,5 +61,14 @@ public class ESUtil {
         .analyzer("custom_search")
         .build();
   }
+
+  public static Supplier<Query> buildBoolQueryForFieldAndValue(String fieldName1, String searchValue1, String fieldName2, String searchValue2, boolean fuzziness) {
+    BoolQuery.Builder boolQueryBuilder = new BoolQuery.Builder();
+    boolQueryBuilder.filter(termQuery(fieldName1, searchValue1), termQuery(fieldName2, searchValue2))
+        .must(matchQuery(fieldName2, searchValue2));
+
+    return () -> Query.of(q -> q.bool(boolQueryBuilder.build()));
+  }
+
 
 }
