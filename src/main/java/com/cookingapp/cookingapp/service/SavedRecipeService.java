@@ -48,4 +48,7 @@ public class SavedRecipeService {
     return savedRecipeRepository.getSavedRecipesByMember(member);
   }
 
+  public List<Long> getSavedRecipeIdsByMember(Member member) {
+    return savedRecipeRepository.getSavedRecipeIdsByMember(member);
+  }
 }

@@ -21,7 +21,7 @@ import com.cookingapp.cookingapp.service.ScrapeService;
 import com.cookingapp.cookingapp.util.Util;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -61,37 +61,45 @@ public class RecipeController {
     public ResponseEntity<List<RecipeHeaderResponse>> scrapeAndCreateNewFoodRecipe(@RequestParam(required = false) String category, @RequestParam(required = true) String foodName){
         log.info("/v1/recipes/search endpoint has been called with @RequestParam foodName = {} , category = {}" , foodName, category);
 
-        switch (category){
-            case "corba": {
-                category = "çorba";
-                break;
-            }
-            case "ana-yemek": {
-                category = "ana yemek";
-                break;
-            }
-            case "tatli": {
-                category = "tatlı";
-                break;
-            }
-            case "icecek": {
-                category = "içecek";
-                break;
-            }
-            default:
-                category = null;
+        if (category != null) {
+          switch (category) {
+            case "corba" -> category = "SOUP";
+            case "ana-yemek" -> category = "MAIN_DISH";
+            case "tatli" -> category = "DESSERT";
+            case "icecek" -> category = "DRINK";
+            default -> category = null;
+          }
         }
 
-        List<RecipeHeaderResponse> foundRecipe = new ArrayList<>(
-            recipeESService.searchRecipe(foodName).stream().map(RecipeES::toHeaderResponse).toList());
+        Member member = authenticationService.isAuthenticated();
 
-        if ( !foundRecipe.isEmpty() ) {
+        List<RecipeES> searchResults = recipeESService.searchRecipe(foodName);
+
+        if ( !searchResults.isEmpty() ) {
             if ( category != null ) {
                 String finalCategory = category;
-                foundRecipe.removeIf(recipe -> !recipe.getCategory().equals(finalCategory));
+                for(RecipeES recipe : searchResults) {
+                    if (!recipe.getCategory().toString().equals(finalCategory)) {
+                        searchResults.remove(recipe);
+                    }
+                }
             }
-            // todo scrapeledi ama uygun değil / bulamadı -> not found
-          return ResponseEntity.ok(foundRecipe);
+
+            if ( searchResults.isEmpty() ) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+
+            List<Long> likedRecipeIds;
+
+            if(member != null){
+                likedRecipeIds = likeService.getLikedRecipeIdsByMember(member);
+            } else {
+              likedRecipeIds = new ArrayList<>();
+            }
+
+            return ResponseEntity.ok(
+                recipeService.getRecipeHeaderResponseWithLikesES(searchResults, likedRecipeIds)
+            );
         }
 
         foodName = Util.removeSpaces(foodName);
@@ -99,10 +107,10 @@ public class RecipeController {
         Recipe recipe = this.scrapeService.scrapeAndCreateNewRecipe(foodName);
         if (recipe != null){
             if( category != null && !recipe.getCategory().toString().equals(category)) {
-                return ResponseEntity.ok().build();
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             }
             else{
-                return ResponseEntity.ok(Collections.singletonList(recipe.toHeaderResponse()));
+                return ResponseEntity.ok(Collections.singletonList(recipe.toHeaderResponse(false)));
             }
         }
         else {
@@ -111,10 +119,15 @@ public class RecipeController {
     }
 
     @GetMapping
-    public ResponseEntity getAllRecipes(){
+    public ResponseEntity<List<RecipeHeaderResponse>> getAllRecipes(){
         log.info("/v1/recipes endpoint has been called");
         List<Recipe> recipeList = this.recipeService.getAllRecipe();
-        return ResponseEntity.ok(recipeList.stream().map(Recipe::toDto));
+        Member member = authenticationService.isAuthenticated();
+        List<Long> likedRecipeIds = new ArrayList<>();
+        if( !recipeList.isEmpty() && member != null){
+            likedRecipeIds = likeService.getLikedRecipeIdsByMember(member);
+        }
+        return ResponseEntity.ok(recipeService.getRecipeHeaderResponseWithLikes(recipeList, likedRecipeIds));
     }
 
 
@@ -128,15 +141,13 @@ public class RecipeController {
         log.info("/v1/recipes endpoint has been called");
         List<RecipeWithLikesAndSaves> recipeWithLikesAndSavesList = this.recipeService.getAllRecipeLoggedIn(memberId);
 
-        // todo rating
         List<HeaderResponseWithDetail> responseList = recipeWithLikesAndSavesList.stream()
-            .map(r -> new HeaderResponseWithDetail(r.getRecipe().toDto(), r.isLiked(), r.isSaved()))
+            .map(r -> new HeaderResponseWithDetail(r.getRecipe().toDto(false, false), r.isLiked(), r.isSaved()))
             .toList();
 
         return ResponseEntity.ok(responseList);
     }
 
-    // todo elastic veri (foto) güncelle
     @GetMapping(value = "/test/es")
     public ResponseEntity getAllRecipesES(){
         log.info("/v1/recipes/es endpoint has been called");
@@ -145,7 +156,7 @@ public class RecipeController {
     }
 
     @GetMapping(value="/category/{category}")
-    public ResponseEntity getCategory(@PathVariable String category) {
+    public ResponseEntity<List<RecipeHeaderResponse>> getCategory(@PathVariable String category) {
         log.info("/v1/recipes/category endpoint has been called with @PathVariable = {}" , category);
         switch (category){
             case "corba": {
@@ -165,9 +176,16 @@ public class RecipeController {
                 break;
             }
             default:
-                category = null;
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-        return ResponseEntity.ok(recipeService.getRecipesByCategory(category).stream().map(Recipe::toDto));
+
+        Member member = authenticationService.isAuthenticated();
+        List<Recipe> recipeList = recipeService.getRecipesByCategory(category);
+        List<Long> likedRecipeIds = new ArrayList<>();
+        if( !recipeList.isEmpty() && member != null){
+            likedRecipeIds = likeService.getLikedRecipeIdsByMember(member);
+        }
+        return ResponseEntity.ok(recipeService.getRecipeHeaderResponseWithLikes(recipeList, likedRecipeIds));
     }
 
     @GetMapping(value = "/{id}")
@@ -175,7 +193,18 @@ public class RecipeController {
         log.info("/v1/recipes/{id} endpoint has been called with @PathVariable = {}" , id);
         Recipe recipe = recipeService.getRecipeById(id);
         if( recipe != null ){
-            return ResponseEntity.ok(recipeService.getRecipeById(id).toDto());
+            Member member = authenticationService.isAuthenticated();
+            if( member != null){
+                List<Long> likedRecipeIds = likeService.getLikedRecipeIdsByMember(member);
+                List<Long> savedRecipeIds = savedRecipeService.getSavedRecipeIdsByMember(member);
+                return ResponseEntity.ok(recipeService.getRecipeById(id).toDto(
+                    likedRecipeIds.contains(id) ? true : false,
+                    savedRecipeIds.contains(id) ? true : false
+                ));
+            }
+            else{
+                return ResponseEntity.ok(recipeService.getRecipeById(id).toDto(false, false));
+            }
         }
         else{
             return ResponseEntity.notFound().build();
@@ -206,11 +235,11 @@ public class RecipeController {
     public ResponseEntity getRecipeOfTheDay(){
         log.info("getRecipeOfTheDay has been called");
         if(this.recipeService.getDailyRandomRecipe() != null){
-            return ResponseEntity.ok(this.recipeService.getDailyRandomRecipe().toDto());
+            return ResponseEntity.ok(this.recipeService.getDailyRandomRecipe().toDto(false, false));
         }
         else{
             this.recipeService.chooseDailyRandomRecipe();
-            return ResponseEntity.ok(this.recipeService.getDailyRandomRecipe().toDto());
+            return ResponseEntity.ok(this.recipeService.getDailyRandomRecipe().toDto(false, false));
         }
     }
 
@@ -224,18 +253,21 @@ public class RecipeController {
             }
             else{
                 likeService.save(recipeId, member);
+                return ResponseEntity.ok().build();
             }
         }
-        return ResponseEntity.ok().body(recipeService.getRecipeById(recipeId));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
+
     @DeleteMapping("/{recipeId}/like")
     public ResponseEntity unlikeRecipe(@PathVariable Long recipeId) {
         log.info("DELETE [UNLIKE] /v1/recipes/{recipeId}/like endpoint has been called with @PathVariable = {}" , recipeId);
         Member member = authenticationService.isAuthenticated();
         if (member != null) {
             likeService.delete(recipeId, member);
+            return ResponseEntity.ok().build();
         }
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
     @PostMapping("/{recipeId}/save")
@@ -249,9 +281,10 @@ public class RecipeController {
             }
             else {
                 savedRecipeService.save(recipeId, member);
+                return ResponseEntity.ok().build();
             }
         }
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
     @DeleteMapping("/{recipeId}/save")
     public ResponseEntity unsaveRecipe(@PathVariable Long recipeId) {
@@ -259,36 +292,42 @@ public class RecipeController {
         Member member = authenticationService.isAuthenticated();
         if (member != null) {
             savedRecipeService.delete(recipeId, member);
+            return ResponseEntity.ok().build();
         }
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
     @GetMapping(value = "/saved")
-    public ResponseEntity getSavedRecipes(){
+    public ResponseEntity<List<RecipeHeaderResponse>> getSavedRecipes(){
         log.info("getSavedRecipes has been called");
         Member member = authenticationService.isAuthenticated();
-        if (member != null) {
-                List<RecipeDto> savedRecipes = savedRecipeService.getSavedRecipesByMember(member)
-                    .stream()
-                    .map(Recipe::toDto)
-                    .toList();
-                return ResponseEntity.ok(savedRecipes);
-            }
-        return ResponseEntity.notFound().build();
+        List<RecipeHeaderResponse> recipeList = new ArrayList<>();
+        if(member != null){
+            List<Long> likedRecipeIds = likeService.getLikedRecipeIdsByMember(member);
+            recipeList = recipeService.getRecipeHeaderResponseWithLikes(savedRecipeService.getSavedRecipesByMember(member), likedRecipeIds);
+            return ResponseEntity.ok(recipeList);
+        }
+        /*
+        if (!recipeList.isEmpty()) {
+            // todo boş için mesaj olabilir
+        }
+
+         */
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
     @GetMapping(value = "/liked")
-    public ResponseEntity getLikedRecipes(){
+    public ResponseEntity<List<RecipeHeaderResponse>> getLikedRecipes(){
         log.info("getLikedRecipes has been called");
         Member member = authenticationService.isAuthenticated();
         if (member != null) {
-                List<RecipeDto> likedRecipes = likeService.getLikedRecipesByMember(member)
-                    .stream()
-                    .map(Recipe::toDto)
-                    .toList();
-                return ResponseEntity.ok(likedRecipes);
+            List<RecipeHeaderResponse> likedRecipes = likeService.getLikedRecipesByMember(member)
+                .stream()
+                .map(recipe -> recipe.toHeaderResponse(true))
+                .toList();
+            return ResponseEntity.ok(likedRecipes);
         }
-        return ResponseEntity.notFound().build();
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
     @GetMapping(value = "/test/deleteAll")
@@ -318,14 +357,16 @@ public class RecipeController {
                     .map(IngredientDto::toIngredient)
                     .toList();
                 Recipe recipe = recipeServiceFacade.saveRecipe(recipeDto.convertToRecipe(), ingredientList, member);
-                return ResponseEntity.ok(recipe.toDto());
+                return ResponseEntity.ok(recipe.toDto(false, false));
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
-    @GetMapping("/{recipeId}/instructions/{instructionIndex}/details")
+
+    // kullanılmıyor
+    @GetMapping("/test/{recipeId}/instructions/{instructionIndex}/details")
     public ResponseEntity explainInstruction(@PathVariable Long recipeId, @RequestParam Long instructionIndex) {
         log.info("explainInstruction has been called");
-        // todo sadece giriş yapanlara özel mi olmalı
+
         /*
         Member member = authenticationService.isAuthenticated();
         if (member != null) { */
@@ -337,6 +378,7 @@ public class RecipeController {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); */
     }
 
+    // todo sadece giriş yapanlara özel olmalı
     @GetMapping("/instructionDetail")
     public ResponseEntity<InstructionExplanation> explain(@RequestParam String instruction) {
         log.info("explainInstruction has been called");

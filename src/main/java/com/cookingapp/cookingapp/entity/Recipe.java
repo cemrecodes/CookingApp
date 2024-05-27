@@ -91,7 +91,7 @@ public class Recipe {
 
     private Long likeCount;
 
-    public RecipeDto toDto(){
+    public RecipeDto toDto(boolean liked, boolean saved){
         RecipeDto recipeDto = new RecipeDto();
         recipeDto.setId(id);
         recipeDto.setImageUrl(imageUrl);
@@ -115,12 +115,12 @@ public class Recipe {
         }
         recipeDto.setInstructions(this.convertInstructions());
         recipeDto.setLikeCount(likeCount);
-        recipeDto.setLiked(false);
-        recipeDto.setSaved(false);
+        recipeDto.setLiked(liked);
+        recipeDto.setSaved(saved);
         return recipeDto;
     }
 
-    public RecipeHeaderResponse toHeaderResponse(){
+    public RecipeHeaderResponse toHeaderResponse(boolean liked){
         RecipeHeaderResponse response = new RecipeHeaderResponse();
         response.setId(id);
         response.setImageUrl(imageUrl);
@@ -130,7 +130,7 @@ public class Recipe {
         response.setDifficultyLevel(DifficultyLevel.toString(difficultyLevel));
         response.setCategory( Category.toString(category));
         response.setLikeCount(likeCount);
-        response.setLiked(false);
+        response.setLiked(liked);
         return response;
     }
 

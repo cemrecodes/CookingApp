@@ -14,6 +14,9 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
   Like save(Like like);
   Like findByRecipeAndMember(Recipe recipe, Member member);
   void deleteLikeById(Like like);
-  @Query("SELECT sr.recipe FROM Like sr WHERE sr.member = :member")
+  @Query("SELECT like.recipe FROM Like like WHERE like.member = :member")
   List<Recipe> getLikedRecipesByMember(Member member);
+
+  @Query("SELECT like.recipe.id FROM Like like WHERE like.member = :member")
+  List<Long> getLikedRecipeIdsByMember(Member member);
 }

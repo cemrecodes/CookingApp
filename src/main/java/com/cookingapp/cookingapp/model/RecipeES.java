@@ -71,7 +71,7 @@ public class RecipeES {
     return recipeDto;
   }
 
-  public RecipeHeaderResponse toHeaderResponse(){
+  public RecipeHeaderResponse toHeaderResponse(boolean liked) {
     RecipeHeaderResponse response = new RecipeHeaderResponse();
     response.setId(id);
     response.setImageUrl(imageUrl);
@@ -82,6 +82,7 @@ public class RecipeES {
     response.setDifficultyLevel(Util.translateDifficultyLevelToTurkish(DifficultyLevel.valueOf(difficultyLevel)));
     response.setCategory(Util.translateCategoryToTurkish(category));
     response.setLikeCount(likeCount);
+    response.setLiked(liked);
     return response;
   }
 }

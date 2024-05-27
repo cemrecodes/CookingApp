@@ -13,9 +13,12 @@ import com.cookingapp.cookingapp.response.MemberProfileResponse;
 import com.cookingapp.cookingapp.response.RecipeHeaderResponse;
 import com.cookingapp.cookingapp.service.AuthenticationService;
 import com.cookingapp.cookingapp.service.GoogleService;
+import com.cookingapp.cookingapp.service.LikeService;
 import com.cookingapp.cookingapp.service.MemberService;
 import com.cookingapp.cookingapp.service.RecipeMemberService;
+import com.cookingapp.cookingapp.service.RecipeService;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -40,8 +43,6 @@ public class MemberController {
 
     private final MemberService memberService;
 
-    private final MemberService memberServiceImp;
-
     private final RecipeMemberService recipeMemberService;
 
     private final GoogleService googleService;
@@ -49,6 +50,12 @@ public class MemberController {
     private final JwtService jwtService;
 
     private final AuthenticationService authService;
+
+    private final AuthenticationService authenticationService;
+
+    private final LikeService likeService;
+
+    private final RecipeService recipeService;
 
     /*
     @GetMapping(value = "/{token}")
@@ -100,7 +107,7 @@ public class MemberController {
         GoogleIdToken googleIdToken = googleService.verifyIdToken(idToken);
         if( googleIdToken != null ){
             // Optional<Member> member = memberService.getMemberByEmail(googleService.getEmail(googleIdToken));
-            UserDetails member = memberServiceImp.loadUserByUsername(googleService.getEmail(googleIdToken));
+            UserDetails member = memberService.loadUserByUsername(googleService.getEmail(googleIdToken));
             if(member != null){
                 return ResponseEntity.ok(Map.of("token", jwtService.generateToken(member)));
             }
@@ -119,20 +126,17 @@ public class MemberController {
     @GetMapping
     public ResponseEntity<MemberProfileResponse> getMember(){
         log.info("getMember has been called");
-        // todo new auth (shorter)
         Member member = authService.isAuthenticated();
         if (member != null) {
                 MemberProfileResponse profileResponse = new MemberProfileResponse();
-                List<RecipeHeaderResponse> recipeList = recipeMemberService.getRecipesByMember(member)
-                    .stream()
-                    .map(Recipe::toHeaderResponse)
-                    .toList();
+                List<Recipe> recipeList = recipeMemberService.getRecipesByMember(member);
+                List<Long> likedRecipeIds = likeService.getLikedRecipeIdsByMember(member);
                 profileResponse.setId(member.getId());
                 profileResponse.setName(member.getName());
                 profileResponse.setSurname(member.getSurname());
                 profileResponse.setProfilePicUrl(member.getProfilePicUrl());
                 profileResponse.setEmail(member.getEmail());
-                profileResponse.setRecipes(recipeList);
+                profileResponse.setRecipes(recipeService.getRecipeHeaderResponseWithLikes(recipeList, likedRecipeIds));
                 return ResponseEntity.ok(profileResponse);
         }
 
@@ -145,15 +149,13 @@ public class MemberController {
         Optional<Member> member = memberService.getMemberById(memberId);
         if(member.isPresent()){
             MemberProfileResponse profileResponse = new MemberProfileResponse();
-            List<RecipeHeaderResponse> recipeList = recipeMemberService.getRecipesByMemberId(memberId)
-                .stream()
-                .map(Recipe::toHeaderResponse)
-                .toList();
+            List<Recipe> recipeList = recipeMemberService.getRecipesByMember(member.get());
+            List<Long> likedRecipeIds = likeService.getLikedRecipeIdsByMember(member.get());
             profileResponse.setId(memberId);
             profileResponse.setName(member.get().getName());
             profileResponse.setProfilePicUrl(member.get().getProfilePicUrl());
             profileResponse.setSurname(member.get().getSurname());
-            profileResponse.setRecipes(recipeList);
+            profileResponse.setRecipes(recipeService.getRecipeHeaderResponseWithLikes(recipeList, likedRecipeIds));
             return ResponseEntity.ok(profileResponse);
         }
 
@@ -168,10 +170,19 @@ public class MemberController {
      */
 
     @GetMapping("/{memberId}/recipes")
-    public ResponseEntity<List<RecipeDto>> getRecipesByMember(@PathVariable Long memberId){
+    public ResponseEntity<List<RecipeHeaderResponse>> getRecipesByMember(@PathVariable Long memberId){
         log.info("getRecipesByMember has been called with memberId: {}", memberId);
-        List<RecipeDto> recipeDtoList = recipeMemberService.getRecipesByMemberId(memberId).stream().map(Recipe::toDto).toList();
-        return ResponseEntity.ok(recipeDtoList);
+        List<Recipe> recipeList = recipeMemberService.getRecipesByMemberId(memberId);
+        Member member = authenticationService.isAuthenticated();
+        if( !recipeList.isEmpty() && member != null){
+            List<Long> likedRecipeIds = likeService.getLikedRecipeIdsByMember(member);
+            return ResponseEntity.ok(recipeService.getRecipeHeaderResponseWithLikes(recipeList, likedRecipeIds));
+        }
+        else if( !recipeList.isEmpty() ){
+            List<Long> likedRecipeIds = new ArrayList<>();
+            return ResponseEntity.ok(recipeService.getRecipeHeaderResponseWithLikes(recipeList, likedRecipeIds));
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
 }

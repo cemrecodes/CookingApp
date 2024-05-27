@@ -58,4 +58,8 @@ public class LikeService {
         return likeRepository.getLikedRecipesByMember(member);
     }
 
+    public List<Long> getLikedRecipeIdsByMember(Member member) {
+        return likeRepository.getLikedRecipeIdsByMember(member);
+    }
+
 }

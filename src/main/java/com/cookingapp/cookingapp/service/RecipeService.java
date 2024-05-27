@@ -5,10 +5,15 @@ import com.cookingapp.cookingapp.dto.RecipeDto;
 import com.cookingapp.cookingapp.dto.RecipeProjection;
 import com.cookingapp.cookingapp.dto.RecipeWithLikesAndSaves;
 import com.cookingapp.cookingapp.entity.Category;
+import com.cookingapp.cookingapp.entity.Member;
 import com.cookingapp.cookingapp.entity.Recipe;
+import com.cookingapp.cookingapp.model.RecipeES;
 import com.cookingapp.cookingapp.repo.RecipeRepository;
+import com.cookingapp.cookingapp.response.RecipeHeaderResponse;
+import java.util.ArrayList;
 import java.util.Random;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,7 +26,6 @@ public class RecipeService {
     private final RecipeRepository recipeRepository;
     private Recipe dailyRandomRecipe;
     // todo make this bean
-
     private final GeminiService geminiService;
     private final Random random = new Random();
 
@@ -98,7 +102,7 @@ public class RecipeService {
     }
 
     public String explainInstruction(Long recipeId, Long instructionIndex) {
-        RecipeDto recipe = this.recipeRepository.getRecipeById(recipeId).toDto();
+        RecipeDto recipe = this.recipeRepository.getRecipeById(recipeId).toDto(false, false);
         int i = 0;
         String explanation = "";
         List<InstructionDto> instructions = recipe.getInstructions();
@@ -119,6 +123,34 @@ public class RecipeService {
         explanation = explanation.replace("\n", " ");
         explanation = explanation.replace("*", "");
         return explanation;
+    }
+
+    public List<RecipeDto> getRecipeListWithLikesAndSaves(List<Recipe> recipeList, List<Long> likedRecipeIds, List<Long> savedRecipeIds) {
+        return recipeList.stream()
+                .map(recipe -> {
+                    boolean liked = likedRecipeIds != null && !likedRecipeIds.isEmpty() && likedRecipeIds.contains(recipe.getId());
+                    boolean saved = savedRecipeIds != null && !savedRecipeIds.isEmpty() && savedRecipeIds.contains(recipe.getId());
+                    return recipe.toDto(liked, saved);
+                })
+                .toList();
+    }
+
+    public List<RecipeHeaderResponse> getRecipeHeaderResponseWithLikes(List<Recipe> recipeList, List<Long> likedRecipeIds) {
+        return recipeList.stream()
+            .map(recipe -> {
+                boolean liked = likedRecipeIds != null && !likedRecipeIds.isEmpty() && likedRecipeIds.contains(recipe.getId());
+                return recipe.toHeaderResponse(liked);
+            })
+            .toList();
+    }
+
+    public List<RecipeHeaderResponse> getRecipeHeaderResponseWithLikesES(List<RecipeES> recipeList, List<Long> likedRecipeIds) {
+        return recipeList.stream()
+            .map(recipe -> {
+                boolean liked = likedRecipeIds != null && !likedRecipeIds.isEmpty() && likedRecipeIds.contains(recipe.getId());
+                return recipe.toHeaderResponse(liked);
+            })
+            .toList();
     }
 
 }

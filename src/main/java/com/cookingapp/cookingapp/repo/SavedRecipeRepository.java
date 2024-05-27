@@ -22,4 +22,7 @@ public interface SavedRecipeRepository extends JpaRepository<SavedRecipe, Long> 
   @Query("SELECT sr.recipe FROM SavedRecipe sr WHERE sr.member = :member")
   List<Recipe> getSavedRecipesByMember(Member member);
 
+  @Query("SELECT sr.recipe.id FROM SavedRecipe sr WHERE sr.member = :member")
+  List<Long> getSavedRecipeIdsByMember(Member member);
+
 }

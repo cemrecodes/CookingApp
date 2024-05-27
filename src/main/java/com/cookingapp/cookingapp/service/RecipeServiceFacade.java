@@ -56,8 +56,9 @@ public class RecipeServiceFacade {
     recipe.setLikeCount(0L);
     recipe.setCreateDate(LocalDateTime.now());
     recipe.setTotalTime(Util.getTotalTime(recipe.getCookingTime(), recipe.getPreparationTime()));
+    byte[] imageBytes = Base64.getDecoder().decode(checkAndFixPadding(recipe.getImageUrl()));
+    recipe.setImageUrl("");
     Recipe finalRecipe = recipeService.save(recipe);
-    byte[] imageBytes = Base64.getDecoder().decode(finalRecipe.getImageUrl());
     String imageUrl = imageUploadService.uploadImage(finalRecipe.getId(), imageBytes);
     finalRecipe.setImageUrl(imageUrl);
     List<Ingredient> list = new ArrayList<>();
@@ -80,13 +81,23 @@ public class RecipeServiceFacade {
   }
 
   private void setDifficultyAndCategory(Recipe recipe) {
-    Map<String, Object> difficultyAndCategory = this.getDifficultyAndCategory(recipe.toDto());
+    Map<String, Object> difficultyAndCategory = this.getDifficultyAndCategory(recipe.toDto(false, false));
     recipe.setDifficultyLevel(DifficultyLevel.convert((String) difficultyAndCategory.get("difficulty")));
     recipe.setCategory(Category.convert((String) difficultyAndCategory.get("category")));
   }
 
   private void setDifficulty(Recipe recipe) {
-    Map<String, Object> difficultyAndCategory = this.getDifficultyAndCategory(recipe.toDto());
+    Map<String, Object> difficultyAndCategory = this.getDifficultyAndCategory(recipe.toDto(false, false));
     recipe.setDifficultyLevel(DifficultyLevel.convert((String) difficultyAndCategory.get("difficulty")));
   }
+
+  private String checkAndFixPadding(String base64String) {
+    int paddingCount = (4 - (base64String.length() % 4)) % 4;
+    StringBuilder paddedBase64 = new StringBuilder(base64String);
+    for (int i = 0; i < paddingCount; i++) {
+      paddedBase64.append('=');
+    }
+    return paddedBase64.toString();
+  }
+
 }
