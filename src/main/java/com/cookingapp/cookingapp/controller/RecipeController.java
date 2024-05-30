@@ -243,7 +243,7 @@ public class RecipeController {
         }
     }
 
-    @PostMapping("/{recipeId}/like")
+    @PostMapping("/like/{recipeId}")
     public ResponseEntity likeRecipe(@PathVariable Long recipeId) {
         log.info("POST [LIKE] /v1/recipes/{recipeId}/like endpoint has been called with @PathVariable = {}" , recipeId);
         Member member = authenticationService.isAuthenticated();
@@ -259,7 +259,7 @@ public class RecipeController {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
-    @DeleteMapping("/{recipeId}/like")
+    @DeleteMapping("/like/{recipeId}")
     public ResponseEntity unlikeRecipe(@PathVariable Long recipeId) {
         log.info("DELETE [UNLIKE] /v1/recipes/{recipeId}/like endpoint has been called with @PathVariable = {}" , recipeId);
         Member member = authenticationService.isAuthenticated();
@@ -270,7 +270,7 @@ public class RecipeController {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
-    @PostMapping("/{recipeId}/save")
+    @PostMapping("/save/{recipeId}")
     public ResponseEntity saveRecipe(@PathVariable Long recipeId) {
         log.info("POST [SAVE] /v1/recipes/{recipeId}/save endpoint has been called with @PathVariable = {}" , recipeId);
         // todo bu ne? token tipleri? isAuthenticated? Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -286,7 +286,7 @@ public class RecipeController {
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
-    @DeleteMapping("/{recipeId}/save")
+    @DeleteMapping("/save/{recipeId}")
     public ResponseEntity unsaveRecipe(@PathVariable Long recipeId) {
         log.info("DELETE [SAVE] /v1/recipes/{recipeId}/save endpoint has been called with @PathVariable = {}" , recipeId);
         Member member = authenticationService.isAuthenticated();

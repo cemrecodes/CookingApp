@@ -72,7 +72,7 @@ public class GeminiService {
 
   public String getDifficultyLevelAndCategory(RecipeDto recipe) {
     String message = "Aşağıdaki yemek tarifinin zorluk derecesini (kolay,orta,zor) ve kategorisini (çorba, ana yemek, tatlı, içecek) belirle." +
-        "Cevabı dictionary şeklinde {} içinde yolla, zorluk derecesi key'i \"difficulty\", kategori keyi ise \"category\" olsun.";
+        "Cevabı direkt json biçiminde yolla, zorluk derecesi key'i \"difficulty\", kategori keyi ise \"category\" olsun. Cevabın başına json vs yazı EKLEME!";
 
     String sb = message + recipe.toStringForAI();
     GeminiResponse response = getCompletion(new GeminiRequest(
