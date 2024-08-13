@@ -21,6 +21,7 @@ import com.cookingapp.cookingapp.service.ScrapeService;
 import com.cookingapp.cookingapp.util.Util;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -78,9 +79,11 @@ public class RecipeController {
         if ( !searchResults.isEmpty() ) {
             if ( category != null ) {
                 String finalCategory = category;
-                for(RecipeES recipe : searchResults) {
+                Iterator<RecipeES> iterator = searchResults.iterator();
+                while (iterator.hasNext()) {
+                    RecipeES recipe = iterator.next();
                     if (!recipe.getCategory().toString().equals(finalCategory)) {
-                        searchResults.remove(recipe);
+                        iterator.remove();
                     }
                 }
             }

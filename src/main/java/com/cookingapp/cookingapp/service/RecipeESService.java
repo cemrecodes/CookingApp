@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -99,7 +100,7 @@ public class RecipeESService {
         .hits()
         .stream()
         .map(Hit::source)
-        .toList();
+        .collect(Collectors.toList());
   }
 
   public RecipeES getRecipeById(Long id){
